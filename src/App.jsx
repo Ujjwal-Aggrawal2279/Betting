@@ -1,11 +1,16 @@
-import { Button } from "@/components/ui/button"
+import { Outlet } from "react-router-dom";
+import { Toaster } from "sonner";
 
 const App = () => {
   return (
-    <Button>
-      Hello
-    </Button>
-  )
-}
+    <>
 
-export default App
+      {/* Routed content */}
+      <Outlet />
+      {/* Toast notification system */}
+      <Toaster richColors position="top-right" />
+    </>
+  );
+};
+
+export default App;
