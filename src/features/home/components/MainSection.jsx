@@ -11,9 +11,9 @@ const images = [
 const MainSection = () => {
        return (
               <>
-                     <div className='h-full 2xl:w-[70%] xl:w-[68%] lg:w-[65%] px-2'>
+                     <div className='h-full 2xl:w-[70%] xl:w-[68%] lg:w-[55%] px-2'>
                             <img src="/images/banner.png" alt="Banner" className='w-full md:h-auto h-[150px]' />
-                            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                            <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
                                    {images.map((image, index) => (
                                           <div key={index} className="flex justify-center items-center overflow-hidden">
                                                  <img

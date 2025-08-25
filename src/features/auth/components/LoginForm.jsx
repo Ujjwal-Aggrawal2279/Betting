@@ -11,11 +11,12 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "../../../store/slices/authSlice";
+import { setCredentials, setPermissions } from "../../../store/slices/authSlice";
 import http from "../../../services/http";
-import { Loader } from 'lucide-react';
-import { toast } from "sonner"
+import { Eye, EyeOff, Loader } from "lucide-react";
+import { toast } from "sonner";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const loginSchema = z.object({
        username: z.string().min(1, "Username is required"),
@@ -24,7 +25,9 @@ const loginSchema = z.object({
 
 const LoginForm = () => {
        const dispatch = useDispatch();
+       const navigate = useNavigate();
        const [loading, setLoading] = useState(false);
+       const [showPassword, setShowPassword] = useState(false);
        const loginForm = useForm({
               resolver: zodResolver(loginSchema),
               defaultValues: { username: "", password: "" },
@@ -34,24 +37,40 @@ const LoginForm = () => {
        const handleLogin = async (values) => {
               try {
                      setLoading(true);
-                     const { data } = await http.post("/login", {
+
+                     // Login API
+                     const response = await http.post("/login", {
                             username: values?.username,
                             password: values?.password,
                      });
 
-                     if (data?.token) {
+                     const { token } = response.data;
+
+                     if (token) {
                             toast.success("Login successful");
-                            dispatch(setCredentials({ token: data?.token }));
+
+                            // Save token in Redux
+                            dispatch(setCredentials({ token }));
+
+                            // Fetch Permissions using the new token
+                            const permResponse = await http.get("/permissions", {
+                                   headers: { Authorization: `Bearer ${token}` },
+                            });
+
+                            if (permResponse?.data?.permissions) {
+                                   dispatch(setPermissions(permResponse.data.permissions));
+                            }
+
+                            navigate("/");
                      } else {
                             toast.error("Login failed");
-                            setLoading(false);
                      }
               } catch (error) {
-                     toast.error(error?.message);
+                     toast.error(error?.response?.data?.message || "Something went wrong");
+              } finally {
                      setLoading(false);
               }
        };
-
 
        return (
               <section className="flex justify-between h-full">
@@ -75,8 +94,12 @@ const LoginForm = () => {
                                                  welcome back
                                           </h2>
 
-                                          <Form key="login" {...loginForm}>
-                                                 <form className="space-y-5 xl:w-1/2 md:w-8/10 w-full" onSubmit={loginForm.handleSubmit(handleLogin)}>
+                                          <Form key="login-mobile" {...loginForm}>
+                                                 <form
+                                                        className="space-y-5 xl:w-1/2 md:w-8/10 w-full"
+                                                        onSubmit={loginForm.handleSubmit(handleLogin)}
+                                                 >
+                                                        {/* Username */}
                                                         <FormField
                                                                control={loginForm.control}
                                                                name="username"
@@ -93,19 +116,32 @@ const LoginForm = () => {
                                                                       </FormItem>
                                                                )}
                                                         />
+                                                        {/* Password */}
                                                         <FormField
                                                                control={loginForm.control}
                                                                name="password"
                                                                render={({ field }) => (
                                                                       <FormItem>
-                                                                             <FormControl>
-                                                                                    <Input
-                                                                                           {...field}
-                                                                                           placeholder="Password"
-                                                                                           type="password"
-                                                                                           className="bg-white/90 border-0 rounded focus:ring-2 focus:ring-yellow-400 p-5"
-                                                                                    />
-                                                                             </FormControl>
+                                                                             <div className="relative">
+                                                                                    <FormControl>
+                                                                                           <Input
+                                                                                                  {...field}
+                                                                                                  placeholder="Password"
+                                                                                                  type={showPassword ? "text" : "password"}
+                                                                                                  className="bg-white/90 border-0 rounded focus:ring-2 focus:ring-yellow-400 p-5 pr-12"
+                                                                                           />
+                                                                                    </FormControl>
+
+                                                                                    {/* Toggle Icon */}
+                                                                                    <button
+                                                                                           type="button"
+                                                                                           onClick={() => setShowPassword((prev) => !prev)}
+                                                                                           className="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-yellow-500"
+                                                                                    >
+                                                                                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                                                    </button>
+                                                                             </div>
+
                                                                              <FormMessage className="text-yellow-300" />
                                                                       </FormItem>
                                                                )}
@@ -113,9 +149,12 @@ const LoginForm = () => {
                                                         <p className="text-white capitalize text-sm text-right">
                                                                forgot password ?
                                                         </p>
+
+                                                        {/* Submit Button */}
                                                         <Button
                                                                className="bg-white text-black w-full font-semibold cursor-pointer"
                                                                variant="ghost"
+                                                               type="submit"
                                                         >
                                                                {loading ? <Loader className="animate-spin" /> : "Login"}
                                                         </Button>
@@ -127,9 +166,14 @@ const LoginForm = () => {
                             {/* Desktop form (right side) */}
                             <div className="hidden lg:flex flex-col flex-1 items-center font-display">
                                    <h1 className="text-4xl text-white font-semibold">Hello !</h1>
-                                   <h2 className="text-4xl text-white font-semibold capitalize mt-2 mb-5">welcome back</h2>
-                                   <Form key="login" {...loginForm}>
-                                          <form className="space-y-5 xl:w-2/3 w-8/10 font-display" onSubmit={loginForm.handleSubmit(handleLogin)}>
+                                   <h2 className="text-4xl text-white font-semibold capitalize mt-2 mb-5">
+                                          welcome back
+                                   </h2>
+                                   <Form key="login-desktop" {...loginForm}>
+                                          <form
+                                                 className="space-y-5 xl:w-2/3 w-8/10 font-display"
+                                                 onSubmit={loginForm.handleSubmit(handleLogin)}
+                                          >
                                                  {/* Username */}
                                                  <FormField
                                                         control={loginForm.control}
@@ -153,27 +197,46 @@ const LoginForm = () => {
                                                         name="password"
                                                         render={({ field }) => (
                                                                <FormItem>
-                                                                      <FormControl>
-                                                                             <Input
-                                                                                    {...field}
-                                                                                    placeholder="Password"
-                                                                                    type="password"
-                                                                                    className="bg-white/90 border-0 rounded focus:ring-2 focus:ring-yellow-400 p-5"
-                                                                             />
-                                                                      </FormControl>
+                                                                      <div className="relative">
+                                                                             <FormControl>
+                                                                                    <Input
+                                                                                           {...field}
+                                                                                           placeholder="Password"
+                                                                                           type={showPassword ? "text" : "password"}
+                                                                                           className="bg-white/90 border-0 rounded focus:ring-2 focus:ring-yellow-400 p-5 pr-12"
+                                                                                    />
+                                                                             </FormControl>
+
+                                                                             {/* Toggle Icon */}
+                                                                             <button
+                                                                                    type="button"
+                                                                                    onClick={() => setShowPassword((prev) => !prev)}
+                                                                                    className="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-yellow-500"
+                                                                             >
+                                                                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                                                             </button>
+                                                                      </div>
+
                                                                       <FormMessage className="text-yellow-300" />
                                                                </FormItem>
                                                         )}
                                                  />
+
+                                                 {/* Submit Button */}
+                                                 <Button
+                                                        type="submit"
+                                                        className="bg-white text-black xl:w-2/3 w-full font-semibold cursor-pointer"
+                                                        variant="ghost"
+                                                 >
+                                                        {loading ? <Loader className="animate-spin" /> : "Login"}
+                                                 </Button>
                                           </form>
                                    </Form>
                                    <p className="text-white py-3 capitalize text-sm">forgot password ?</p>
-                                   <Button className="bg-white text-black xl:w-2/3 w-8/10 font-semibold cursor-pointer" variant="ghost">{loading ? <Loader className="animate-spin" /> : "Login"}</Button>
                             </div>
                      </div>
               </section>
        );
 };
-
 
 export default LoginForm;

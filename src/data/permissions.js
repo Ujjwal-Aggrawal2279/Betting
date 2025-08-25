@@ -1,0 +1,11 @@
+export const Permissions = [
+  { label: "View Roles", value: "view_roles" },
+  { label: "Create Role", value: "create_role" },
+  { label: "Edit Role", value: "edit_role" },
+  { label: "Role Permissions Manager", value: "role_permissions_manager" },
+  { label: "Create User", value: "create_user" },
+  { label: "Edit User", value: "edit_user" },
+  { label: "Delete User", value: "delete_user" },
+  { label: "View User", value: "view_user" },
+  { label: "Impersonate User", value: "impersonate_user" },
+];
