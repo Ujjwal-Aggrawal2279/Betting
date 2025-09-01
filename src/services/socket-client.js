@@ -9,7 +9,7 @@ export const connectSocket = () => {
     const state = store.getState();
     const token = state.auth.token;
 
-    socket = io(import.meta.env.BACKEND_URL || "http://localhost:5000", {
+    socket = io("*", {
       auth: { token },
     });
   }
