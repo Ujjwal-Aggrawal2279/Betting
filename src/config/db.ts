@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { sendEmail } from "./mailer";
 
 const connectDB = async (): Promise<void> => {
      try {

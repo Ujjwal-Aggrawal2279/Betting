@@ -36,6 +36,7 @@ const UserSchema = new Schema<IUser>(
                          "view_roles",
                          "create_role",
                          "edit_role",
+                         "delete_role",
                          "role_permissions_manager",
                          "create_user",
                          "edit_user",

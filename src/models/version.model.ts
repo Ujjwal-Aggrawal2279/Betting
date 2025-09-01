@@ -7,7 +7,7 @@ interface ChangeEntry {
      timestamp: Date;
 }
 
-interface IVersion extends Document {
+export interface IVersion extends Document {
      tableName: string;
      recordId: string;
      history: ChangeEntry[];
