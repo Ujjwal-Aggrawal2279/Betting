@@ -24,7 +24,7 @@ const server = http.createServer(app);
 
 // Cors Policy
 const corsOptions: CorsOptions = {
-     origin: process.env.FRONTEND_URL || "http://localhost:5173",
+     origin: "*",
      credentials: true,
 };
 
