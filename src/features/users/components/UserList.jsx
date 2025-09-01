@@ -20,6 +20,10 @@ import {
        DropdownMenuItem,
        DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import UserDetailSheet from "./UserDetailSheet";
+import UserDeleteAlert from "./UserDeleteAlert";
+import { toast } from "sonner";
+import { deleteUser } from "../../../store/slices/userSlice";
 
 export default function UserList() {
        const dispatch = useDispatch();
@@ -28,13 +32,16 @@ export default function UserList() {
 
        const [page, setPage] = useState(1);
        const rowsPerPage = 15;
+       const [selectedUserId, setSelectedUserId] = useState(null);
+       const [isSheetOpen, setIsSheetOpen] = useState(false);
+       const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
        // Fetch users whenever page changes
        useEffect(() => {
               dispatch(fetchUsers(page));
        }, [dispatch, page]);
 
-       const pageData = users?.data || [];
+       const pageData = users || [];
        const totalPages = users?.total ? Math.ceil(users.total / rowsPerPage) : 1;
 
        if (loading)
@@ -44,17 +51,52 @@ export default function UserList() {
                      </div>
               );
 
+       const handleEditClick = (userId) => {
+              setSelectedUserId(userId);
+              setIsSheetOpen(true);
+       };
+
+       const handleSheetClose = () => {
+              setIsSheetOpen(false);
+       };
+
+       const handleDeleteAlert = (userId) => {
+              setSelectedUserId(userId);
+              setOpenDeleteDialog(true);
+       };
+
+       const handleDeleteDialogClose = () => {
+              setOpenDeleteDialog(false);
+       };
+
+       const handleDeleteUser = async (userId) => {
+              try {
+                     const response = await dispatch(deleteUser(userId));
+                     if (response) {
+                            dispatch(fetchUsers(page));
+                            toast.success(response.payload.message);
+                            setOpenDeleteDialog(false);
+                     } else {
+                            toast.error(response.payload.message);
+                     }
+              } catch (error) {
+                     toast.error(error.message || "Failed to delete user");
+              }
+       }
+
        return (
               <div className="p-6 text-white font-display">
                      {/* Header */}
                      <div className="flex items-center justify-between mb-6">
                             <h1 className="text-2xl font-bold tracking-tight">Users</h1>
                             {permissions.includes("create_user") && (
-                                   <AddUserSheet>
-                                          <Button className="bg-amber-500 text-black font-semibold hover:bg-amber-400 cursor-pointer rounded-xl shadow-sm flex items-center">
-                                                 <Plus className="mr-2 h-4 w-4" /> Add User
-                                          </Button>
-                                   </AddUserSheet>
+                                   <div>
+                                          <AddUserSheet>
+                                                 <Button className="bg-amber-500 text-black font-semibold hover:bg-amber-400 cursor-pointer rounded-xl shadow-sm flex items-center">
+                                                        <Plus className="mr-2 h-4 w-4" /> Add User
+                                                 </Button>
+                                          </AddUserSheet>
+                                   </div>
                             )}
                      </div>
 
@@ -66,13 +108,27 @@ export default function UserList() {
                                                  <TableHead className="w-12 text-white/80 font-semibold">
                                                         <Checkbox aria-label="Select all" />
                                                  </TableHead>
-                                                 <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">ID</TableHead>
-                                                 <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Full Name</TableHead>
-                                                 <TableHead className="hidden xl:table-cell text-white/80 font-semibold uppercase tracking-wide text-xs">Email</TableHead>
-                                                 <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Role</TableHead>
-                                                 <TableHead className="hidden md:table-cell text-white/80 font-semibold uppercase tracking-wide text-xs">Enabled</TableHead>
-                                                 <TableHead className="hidden md:table-cell text-white/80 font-semibold uppercase tracking-wide text-xs">Created By</TableHead>
-                                                 <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Actions</TableHead>
+                                                 <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">
+                                                        ID
+                                                 </TableHead>
+                                                 <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">
+                                                        Full Name
+                                                 </TableHead>
+                                                 <TableHead className="hidden xl:table-cell text-white/80 font-semibold uppercase tracking-wide text-xs">
+                                                        Email
+                                                 </TableHead>
+                                                 <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">
+                                                        Role
+                                                 </TableHead>
+                                                 <TableHead className="hidden md:table-cell text-white/80 font-semibold uppercase tracking-wide text-xs">
+                                                        Enabled
+                                                 </TableHead>
+                                                 <TableHead className="hidden md:table-cell text-white/80 font-semibold uppercase tracking-wide text-xs">
+                                                        Created By
+                                                 </TableHead>
+                                                 <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">
+                                                        Actions
+                                                 </TableHead>
                                           </TableRow>
                                    </TableHeader>
 
@@ -94,8 +150,12 @@ export default function UserList() {
                                                                       {user.role?.name}
                                                                </Badge>
                                                         </TableCell>
-                                                        <TableCell className="hidden md:table-cell text-white/70">{user.enabled ? "Enabled" : "Disabled"}</TableCell>
-                                                        <TableCell className="hidden md:table-cell text-white/70">{user?.createdBy?.fullName}</TableCell>
+                                                        <TableCell className="hidden md:table-cell text-white/70">
+                                                               {user.enabled ? "Enabled" : "Disabled"}
+                                                        </TableCell>
+                                                        <TableCell className="hidden md:table-cell text-white/70">
+                                                               {user?.createdBy?.fullName}
+                                                        </TableCell>
                                                         <TableCell className="text-white/70">
                                                                <DropdownMenu>
                                                                       <DropdownMenuTrigger asChild>
@@ -103,9 +163,22 @@ export default function UserList() {
                                                                                     <MoreHorizontal className="h-4 w-4 text-white/70" />
                                                                              </button>
                                                                       </DropdownMenuTrigger>
-                                                                      <DropdownMenuContent align="start" className="bg-[#1E2233] border border-white/10 text-white font-display">
-                                                                             <DropdownMenuItem className="hover:bg-amber-500/30 cursor-pointer" onClick={() => { }}>Edit</DropdownMenuItem>
-                                                                             <DropdownMenuItem className="hover:bg-red-500/30 cursor-pointer" onClick={() => { }}>Delete</DropdownMenuItem>
+                                                                      <DropdownMenuContent
+                                                                             align="start"
+                                                                             className="bg-[#1E2233] border border-white/10 text-white font-display"
+                                                                      >
+                                                                             <DropdownMenuItem
+                                                                                    className="hover:bg-amber-500/30 cursor-pointer"
+                                                                                    onClick={() => handleEditClick(user._id)}
+                                                                             >
+                                                                                    Edit
+                                                                             </DropdownMenuItem>
+                                                                             <DropdownMenuItem
+                                                                                    className="hover:bg-red-500/30 cursor-pointer"
+                                                                                    onClick={() => handleDeleteAlert(user._id)}
+                                                                             >
+                                                                                    Delete
+                                                                             </DropdownMenuItem>
                                                                       </DropdownMenuContent>
                                                                </DropdownMenu>
                                                         </TableCell>
@@ -127,7 +200,8 @@ export default function UserList() {
                                    </Button>
 
                                    <div className="text-white/80 text-sm">
-                                          Page <span className="text-white font-semibold">{page}</span> of <span className="text-white font-semibold">{totalPages}</span>
+                                          Page <span className="text-white font-semibold">{page}</span> of{" "}
+                                          <span className="text-white font-semibold">{totalPages}</span>
                                    </div>
 
                                    <Button
@@ -141,6 +215,16 @@ export default function UserList() {
                                    </Button>
                             </div>
                      </div>
+
+                     {/* Conditionally Render UserDetailSheet */}
+                     {selectedUserId && (
+                            <UserDetailSheet userId={selectedUserId} isOpen={isSheetOpen} onClose={handleSheetClose} />
+                     )}
+
+                     {/* Conditionally Render DeleteUserAlert */}
+                     {selectedUserId && (
+                            <UserDeleteAlert userId={selectedUserId} isOpen={openDeleteDialog} onClose={handleDeleteDialogClose} onDelete={handleDeleteUser} />
+                     )}
               </div>
        );
 }

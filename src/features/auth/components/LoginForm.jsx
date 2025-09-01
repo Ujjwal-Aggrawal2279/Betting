@@ -16,7 +16,7 @@ import http from "../../../services/http";
 import { Eye, EyeOff, Loader } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const loginSchema = z.object({
        username: z.string().min(1, "Username is required"),
@@ -225,14 +225,14 @@ const LoginForm = () => {
                                                  {/* Submit Button */}
                                                  <Button
                                                         type="submit"
-                                                        className="bg-white text-black xl:w-2/3 w-full font-semibold cursor-pointer"
+                                                        className="bg-white text-black w-full font-semibold cursor-pointer"
                                                         variant="ghost"
                                                  >
                                                         {loading ? <Loader className="animate-spin" /> : "Login"}
                                                  </Button>
                                           </form>
                                    </Form>
-                                   <p className="text-white py-3 capitalize text-sm">forgot password ?</p>
+                                   <Link to="/forgot-password" className="text-white py-3 capitalize text-sm"><p className="text-white py-3 capitalize text-sm">change password ?</p></Link>
                             </div>
                      </div>
               </section>

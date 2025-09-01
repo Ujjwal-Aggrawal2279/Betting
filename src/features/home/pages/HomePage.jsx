@@ -7,7 +7,7 @@ import GlobalChat from '../components/GlobalChat'
 const HomePage = () => {
        return (
               <Layout>
-                     <div className='flex h-full'>
+                     <div className='w-screen flex h-full'>
                             <NavigationSidebar />
                             <MainSection />
                             <GlobalChat />

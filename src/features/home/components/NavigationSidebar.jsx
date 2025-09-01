@@ -6,6 +6,8 @@ import {
        ChartNoAxesCombined,
        Cog,
        UserPlus,
+       CircleDollarSign,
+       Lock,
 } from "lucide-react";
 import MobileSidebar from "./MobileSidebar";
 import { NavLink } from "react-router-dom";
@@ -14,10 +16,11 @@ const navItems = [
        { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
        { to: "/users", label: "Users", icon: UserPlus },
        { to: "/games", label: "Games", icon: Gamepad2 },
-       { to: "/bets", label: "Bets", icon: Banknote },
+       { to: "/rates", label: "Rates", icon: CircleDollarSign },
+       // { to: "/bets", label: "Bets", icon: Banknote },
        { to: "/tokens", label: "Tokens", icon: Coins },
-       { to: "/analytics", label: "Analytics", icon: ChartNoAxesCombined },
-       { to: "/settings", label: "Settings", icon: Cog },
+       {to: "/forgot-password", label: "Password", icon: Lock}
+       // { to: "/analytics", label: "Analytics", icon: ChartNoAxesCombined }
 ];
 
 const NavigationSidebar = () => {

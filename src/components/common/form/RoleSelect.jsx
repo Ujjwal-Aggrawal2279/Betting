@@ -13,10 +13,11 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { useSelector } from "react-redux"
 
 export function RoleSelect({ options, label, fieldProps, createRolePath }) {
-       console.log(options)
        const [open, setOpen] = useState(false)
+       const permissions = useSelector((state) => state.auth.permissions);
        const navigate = useNavigate()
 
        return (
@@ -57,7 +58,7 @@ export function RoleSelect({ options, label, fieldProps, createRolePath }) {
                                                                              </CommandItem>
                                                                       ))}
 
-                                                                      <CommandItem
+                                                                      {permissions.includes("create_role") && <CommandItem
                                                                              className="text-orange-400 font-semibold"
                                                                              onSelect={() => {
                                                                                     setOpen(false)
@@ -65,7 +66,7 @@ export function RoleSelect({ options, label, fieldProps, createRolePath }) {
                                                                              }}
                                                                       >
                                                                              + Create new role...
-                                                                      </CommandItem>
+                                                                      </CommandItem>}
                                                                </CommandGroup>
                                                         </CommandList>
                                                  </Command>

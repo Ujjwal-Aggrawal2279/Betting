@@ -19,12 +19,14 @@ import { Permissions } from "../../../data/permissions"
 import { Switch } from "@/components/ui/switch"
 import { useDispatch, useSelector } from "react-redux"
 import { useEffect } from "react"
-import { fetchRoles } from "../../../store/slices/roleSlice"
+import { fetchRolePermissions, fetchRoles } from "../../../store/slices/roleSlice"
+import { createUser } from "../../../store/slices/userSlice"
+import { toast } from "sonner";
 
 // ✅ Validation schema
 const formSchema = z.object({
-       firstname: z.string().min(2, "Name must be at least 2 characters."),
-       lastname: z.string().min(2, "Name must be at least 2 characters."),
+       firstName: z.string().min(2, "Name must be at least 2 characters."),
+       lastName: z.string().min(2, "Name must be at least 2 characters."),
        username: z.string().min(2, "Username must be at least 2 characters."),
        email: z.string().email("Enter a valid email."),
        password: z.string().min(6, "Password must be at least 6 characters."),
@@ -36,12 +38,13 @@ const formSchema = z.object({
 
 export default function AddUserSheet() {
        const dispatch = useDispatch();
-       const { list: roles, loading } = useSelector(state => state.roles)
+       const { selectedRolePermissions, list: roles } = useSelector((state) => state.roles);
+
        const form = useForm({
               resolver: zodResolver(formSchema),
               defaultValues: {
-                     firstname: "",
-                     lastname: "",
+                     firstName: "",
+                     lastName: "",
                      username: "",
                      email: "",
                      password: "",
@@ -50,19 +53,51 @@ export default function AddUserSheet() {
                      permissions: [],
                      enabled: true,
               },
+       });
 
-       })
+       // Watch the role field
+       const selectedRole = form.watch("role");
 
-       // Fetch Roles
+       // Fetch Roles once on mount
        useEffect(() => {
               dispatch(fetchRoles());
        }, [dispatch]);
 
+       // Fetch permissions when role changes
+       useEffect(() => {
+              if (selectedRole) {
+                     dispatch(fetchRolePermissions(selectedRole));
+              }
+       }, [selectedRole, dispatch]);
 
-       const onSubmit = (data) => {
-              console.log("New User:", data)
-              // 🔥 You can call API here
-       }
+       // Update permissions field when Redux state changes
+       useEffect(() => {
+              if (selectedRolePermissions?.length) {
+                     form.setValue("permissions", selectedRolePermissions);
+              } else {
+                     form.setValue("permissions", []);
+              }
+       }, [selectedRolePermissions, form]);
+
+       const onSubmit = async (data) => {
+              try {
+                     await dispatch(createUser(data)).unwrap();
+                     toast.success("User created successfully");
+                     form.reset({
+                            firstName: "",
+                            lastName: "",
+                            username: "",
+                            email: "",
+                            password: "",
+                            tokens: "",
+                            role: "",
+                            permissions: [],
+                            enabled: true,
+                     });
+              } catch (error) {
+                     toast.error(error.message || "Failed to create user");
+              }
+       };
 
        return (
               <Sheet>
@@ -101,14 +136,14 @@ export default function AddUserSheet() {
                                           {/* first name */}
                                           <FloatingLabelInput
                                                  label={"First Name"}
-                                                 fieldProps={{ control: form.control, name: "firstname" }}
+                                                 fieldProps={{ control: form.control, name: "firstName" }}
                                                  type="text"
                                           />
 
                                           {/* last name */}
                                           <FloatingLabelInput
                                                  label={"Last Name"}
-                                                 fieldProps={{ control: form.control, name: "lastname" }}
+                                                 fieldProps={{ control: form.control, name: "lastName" }}
                                                  type="text"
                                           />
 

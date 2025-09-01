@@ -1,16 +1,30 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts"
-
-// dummy data (30 days)
-const data = Array.from({ length: 30 }, (_, i) => ({
-       day: i + 1,
-       requested: Math.floor(Math.random() * 20) + 10,
-       approved: Math.floor(Math.random() * 15) + 5,
-       pending: Math.floor(Math.random() * 5),
-       rejected: Math.floor(Math.random() * 5),
-}))
+import { fetchMonthlyTokenData } from "../../../store/slices/dashboardSlice"
 
 export default function TokensFlowChart() {
+       const dispatch = useDispatch()
+       const { monthlyTokenData } = useSelector(state => state.stats)
+       useEffect(() => {
+              dispatch(fetchMonthlyTokenData())
+       }, [dispatch])
+
+       if (!monthlyTokenData) {
+              return (
+                     <Card className="shadow-md bg-[#1E2130] border-none mx-4 rounded-sm font-display">
+                            <CardHeader>
+                                   <CardTitle className="text-lg font-semibold text-white">
+                                          Tokens Flow (Current Month)
+                                   </CardTitle>
+                            </CardHeader>
+                            <CardContent className="h-[350px]">
+                                   <p className="text-center text-gray-500">No data available</p>
+                            </CardContent>
+                     </Card>
+              )
+       }
        return (
               <Card className="shadow-md bg-[#1E2130] border-none mx-4 rounded-sm font-display">
                      <CardHeader>
@@ -20,7 +34,7 @@ export default function TokensFlowChart() {
                      </CardHeader>
                      <CardContent className="h-[350px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                   <LineChart data={data}>
+                                   <LineChart data={monthlyTokenData}>
                                           <CartesianGrid stroke="#2A2D3D" strokeDasharray="3 3" />
                                           <XAxis dataKey="day" stroke="#C8CBD9" />
                                           <YAxis stroke="#C8CBD9" />

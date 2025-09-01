@@ -1,146 +1,69 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MessageSquare, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import EmojiPicker from "emoji-picker-react";
+import { connectSocket, onUserCount, getMessages, onMessages, onNewMessage, sendMessage, disconnectSocket } from "../../../services/socket-client";
 
 
 const GlobalChat = () => {
        const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-       const [messages, setMessages] = useState([
-              { user: "⛳ janalleman", text: "wtf", type: "user", avatar: "🦊" },
-              {
-                     user: "⛳ janalleman",
-                     text: "i just won upgrader and its not giving me my item",
-                     type: "user",
-                     avatar: "🦊",
-              },
-              {
-                     user: "🦁 NotTerry",
-                     text: "Did you click off of the pop up? If you did it'll auto sell it for you with +5% and you'll receive the balance automatically.",
-                     type: "mod",
-                     avatar: "🧠",
-              },
-              {
-                     user: "⛳ janalleman",
-                     text: "no i think its lag or something bc when i try to upgrade again ita says game active",
-                     type: "user",
-                     avatar: "🦊",
-              },
-              { user: "⛳ janalleman", text: "oh i got it", type: "user", avatar: "🦁" },
-              { user: "🦁 NotTerry", text: "😅", type: "mod", avatar: "🧠" },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "Tomorrow I get to cf :)",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "And hopefully I end this 7 loss stream",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "Streak*",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              { user: "⛳ janalleman", text: "oh i got it", type: "user", avatar: "🦁" },
-              { user: "🦁 NotTerry", text: "😅", type: "mod", avatar: "🧠" },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "Tomorrow I get to cf :)",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "And hopefully I end this 7 loss stream",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "Streak*",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              { user: "⛳ janalleman", text: "oh i got it", type: "user", avatar: "🦁" },
-              { user: "🦁 NotTerry", text: "😅", type: "mod", avatar: "🧠" },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "Tomorrow I get to cf :)",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "And hopefully I end this 7 loss stream",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "Streak*",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              { user: "⛳ janalleman", text: "oh i got it", type: "user", avatar: "🦁" },
-              { user: "🦁 NotTerry", text: "😅", type: "mod", avatar: "🧠" },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "Tomorrow I get to cf :)",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "And hopefully I end this 7 loss stream",
-                     type: "user",
-                     avatar: "🐯",
-              },
-              {
-                     user: "🤝 ZergsRustStakebanditc",
-                     text: "Streak*",
-                     type: "user",
-                     avatar: "🐯",
-              },
-       ]);
+       const [userOnline, setUserOnline] = useState(0);
+       const [messages, setMessages] = useState([]);
        const [input, setInput] = useState("");
 
-       const sendMessage = () => {
+       useEffect(() => {
+              connectSocket();
+
+              // update online users
+              onUserCount((count) => setUserOnline(count));
+
+              // initial old messages
+              onMessages((msgs) => setMessages(msgs));
+
+              // new incoming messages
+              onNewMessage((msg) => {
+                     setMessages((prev) => [...prev, msg]);
+              });
+
+              // request old messages once
+              getMessages();
+
+              return () => disconnectSocket();
+       }, []);
+
+       const handleSendMessage = () => {
               if (input.trim() === "") return;
-              setMessages([...messages, input]);
+              sendMessage({ message: input });
               setInput("");
        };
 
        return (
               <>
                      {/* Large screens: always visible sidebar */}
-                     <div className="hidden lg:flex flex-col h-full xl:w-[25%] lg:w-[35%] bg-[#131620] font-display relative">
+                     <div className="hidden lg:flex flex-col h-full xl:w-[30%] lg:w-[35%] bg-[#131620] font-display relative">
                             <div className="flex items-center justify-between px-4 py-5">
                                    <h2 className="text-xl font-bold tracking-wide text-white">LIVE CHAT</h2>
-                                   <span className="text-yellow-400 text-base font-bold">● 35 ONLINE</span>
+                                   <span className="text-yellow-400 text-base font-bold">● {userOnline} ONLINE</span>
                             </div>
                             <div className="w-full h-[80vh] overflow-x-hidden overflow-y-scroll text-white custom-scrollbar">
                                    {messages?.map((message, index) => (
-                                          <div key={index} className="flex gap-4 px-3 py-2">
-                                                 <span>{message?.avatar}</span>
+                                          <div key={index} className="flex gap-4 px-3 py-2 items-center">
+                                                 <img src={message?.avatar} className="rounded size-8" />
                                                  <p className="font-semibold">{message.text}</p>
                                           </div>
                                    ))}
                             </div>
 
-                            <div className="flex gap-2 absolute w-full px-4 py-6 bottom-0 bg-[#161B2A]">
+                            <div className="flex gap-2 absolute w-full px-4 py-6 bottom-0 bg-[#161B2A] items-center">
                                    <div className="flex-1 flex items-center bg-[#0f111a] rounded-xl px-3 py-2 border border-gray-700">
                                           <Input
                                                  className="flex-1 bg-transparent border-none text-gray-300 focus-visible:ring-0 focus-visible:outline-none placeholder-gray-500"
                                                  placeholder="Type a message..."
                                                  value={input}
                                                  onChange={(e) => setInput(e.target.value)}
-                                                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                                                 onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                                           />
                                           {/* Emoji Picker Button */}
                                           <Smile
@@ -148,12 +71,13 @@ const GlobalChat = () => {
                                                  onClick={() => setShowEmojiPicker((prev) => !prev)}
                                           />
                                    </div>
-                                   <button
-                                          onClick={sendMessage}
-                                          className="bg-[#EC981A] px-3 rounded text-black font-semibold"
+                                   <Button
+                                          onClick={handleSendMessage}
+                                          variant="ghost"
+                                          className="bg-[#EC981A] rounded text-black font-semibold cursor-pointer h-11"
                                    >
                                           Send
-                                   </button>
+                                   </Button>
                                    {/* Emoji Picker */}
                                    {showEmojiPicker && (
                                           <div className="absolute bottom-16 right-4 z-50 bg-[#1a1e29] rounded-md shadow-md">
@@ -178,17 +102,17 @@ const GlobalChat = () => {
                                    >
                                           <div className="flex items-center justify-between my-6">
                                                  <h2 className="text-xl font-bold tracking-wide text-white">LIVE CHAT</h2>
-                                                 <span className="text-yellow-400 text-base font-bold">● 35 ONLINE</span>
+                                                 <span className="text-yellow-400 text-base font-bold">● {userOnline} ONLINE</span>
                                           </div>
-                                          <div className="w-full overflow-x-hidden overflow-y-scroll text-white custom-scrollbar">
+                                          <div className="w-full overflow-x-hidden overflow-y-scroll text-white custom-scrollbar h-full">
                                                  {messages?.map((message, index) => (
-                                                        <div key={index} className="flex gap-4 px-3 py-2">
-                                                               <span>{message?.avatar}</span>
+                                                        <div key={index} className="flex gap-4 px-3 py-2 items-center">
+                                                               <img src={message?.avatar} className="rounded size-8" />
                                                                <p className="font-semibold">{message.text}</p>
                                                         </div>
                                                  ))}
                                           </div>
-                                          <div className="flex-1 flex items-center bg-[#0f111a] rounded-xl px-3 py-2 border border-gray-700">
+                                          <div className="flex items-center bg-[#0f111a] rounded-xl px-3 py-2 border border-gray-700">
                                                  {/* Emoji Picker Button */}
                                                  <Smile
                                                         className="text-gray-400 hover:text-white cursor-pointer w-5 h-5 ml-2"
@@ -199,10 +123,10 @@ const GlobalChat = () => {
                                                         placeholder="Type a message..."
                                                         value={input}
                                                         onChange={(e) => setInput(e.target.value)}
-                                                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                                                        onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                                                  />
                                                  <button
-                                                        onClick={sendMessage}
+                                                        onClick={handleSendMessage}
                                                         className="bg-[#EC981A] p-2 rounded text-black font-semibold"
                                                  >
                                                         Send
