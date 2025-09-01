@@ -173,13 +173,22 @@ const findParentOddsOptimized = async (
        matchId: string
 ): Promise<PopulatedMatchOdds[] | null> => {
        const users: IUser[] = [];
-       let currentId = userId;
+       const visited = new Set<string>();
+       let currentId: mongoose.Types.ObjectId | null = userId;
 
-       // Build user hierarchy chain
+       // Build user hierarchy chain safely
        while (currentId) {
-              const u = await User.findById(currentId).select("_id createdBy fullName").lean<IUser>();
+              const idStr = currentId.toString();
+              if (visited.has(idStr)) break; // 🔒 stop infinite loop
+              visited.add(idStr);
+
+              const u = await User.findById(currentId)
+                     .select("_id createdBy fullName")
+                     .lean<IUser>();
+
               if (!u) break;
               users.push(u);
+
               currentId = u.createdBy as any;
        }
 
@@ -193,9 +202,9 @@ const findParentOddsOptimized = async (
 
        if (!odds.length) return null;
 
-       // Return the odds created by the closest parent
+       // Return the odds created by the closest parent in the chain
        for (const u of users) {
-              const o = odds.find(oo => oo.createdBy?._id.toString() === u._id.toString());
+              const o = odds.find(oo => oo.createdBy?._id?.toString() === u._id.toString());
               if (o) return [o];
        }
 
@@ -241,6 +250,7 @@ export const getMatchOddsByHierarchy = async (req: Request, res: Response) => {
               return res.status(500).json({ message: "Server Error" });
        }
 };
+
 
 // Get scoreCard
 export const matchScoreCard = async (req: Request, res: Response) => {
