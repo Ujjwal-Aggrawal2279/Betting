@@ -6,79 +6,77 @@ import historicalmatchModel from "../models/historicalmatch.model";
 import { Role } from "../models/role.model";
 import { Token } from "../models/token.model";
 
+// ------------------------------
+// Helper: Get descendant user IDs safely
+// ------------------------------
+const getDescendantUserIds = (allUsers: any[], userId: string): string[] => {
+       const visited = new Set<string>();
+       const result: string[] = [];
+       const queue = [userId];
+
+       while (queue.length > 0) {
+              const current = queue.shift()!;
+              if (visited.has(current)) continue;
+              visited.add(current);
+
+              const children = allUsers.filter(u => u.createdBy?.toString() === current).map(u => u._id.toString());
+              result.push(...children);
+              queue.push(...children);
+       }
+
+       return result;
+};
+
+// ------------------------------
+// Dashboard Stats
+// ------------------------------
 export const getDashboardStats = async (req: Request, res: Response) => {
        try {
               const loggedInUserId = (req as any).user.id;
 
-              // ----------------------------
-              // Users stats
-              // ----------------------------
-              const totalUsers = await User.countDocuments();
-              const totalActiveUsers = await User.countDocuments({ enabled: true });
-              const totalInactiveUsers = await User.countDocuments({ enabled: false });
+              // 1️⃣ Users stats
+              const [totalUsers, totalActiveUsers, totalInactiveUsers] = await Promise.all([
+                     User.countDocuments(),
+                     User.countDocuments({ enabled: true }),
+                     User.countDocuments({ enabled: false }),
+              ]);
 
               const startOfToday = new Date();
               startOfToday.setHours(0, 0, 0, 0);
-
               const newUsers = await User.countDocuments({ createdAt: { $gte: startOfToday } });
 
-              // ----------------------------
-              // Matches stats
-              // ----------------------------
-              const liveMatches = await matchModel.countDocuments({ status: "Live" });
-              const scheduledMatches = await matchModel.countDocuments({ status: "Scheduled" });
-              const completedMatches = await historicalmatchModel.countDocuments({ status: "Completed" });
-              const cancelledMatches = await historicalmatchModel.countDocuments({ status: "Cancelled" });
+              // 2️⃣ Matches stats
+              const [liveMatches, scheduledMatches, completedMatches, cancelledMatches] = await Promise.all([
+                     matchModel.countDocuments({ status: "Live" }),
+                     matchModel.countDocuments({ status: "Scheduled" }),
+                     historicalmatchModel.countDocuments({ status: "Completed" }),
+                     historicalmatchModel.countDocuments({ status: "Cancelled" }),
+              ]);
 
-              // ----------------------------
-              // Token stats with hierarchy
-              // ----------------------------
+              // 3️⃣ Token stats with hierarchy
               const loggedInUser = await User.findById(loggedInUserId).populate("role").lean();
               if (!loggedInUser) return res.status(404).json({ message: "User not found" });
 
               const role = await Role.findById(loggedInUser.role._id).lean();
               if (!role) return res.status(400).json({ message: "Role not found" });
 
-              // Recursive function to get descendant user IDs
-              const getDescendantUserIds = async (userId: string): Promise<string[]> => {
-                     const children = await User.find({ createdBy: userId }).select("_id").lean();
-                     let allIds = children.map((c) => c._id.toString());
-                     for (const child of children) {
-                            const subIds = await getDescendantUserIds(child._id.toString());
-                            allIds = [...allIds, ...subIds];
-                     }
-                     return allIds;
-              };
-
+              const allUsers = await User.find({}).select("_id createdBy").lean();
               let userIds: string[] = [loggedInUserId];
 
               if (!role.parentRole) {
-                     // Master / top-level → include all descendants
-                     const descendantIds = await getDescendantUserIds(loggedInUserId);
+                     const descendantIds = getDescendantUserIds(allUsers, loggedInUserId);
                      userIds = [...userIds, ...descendantIds];
               }
-              // Last-level users → just themselves (userIds = [loggedInUserId])
 
-              // Aggregate token stats
               const tokenStats = await Token.aggregate([
-                     {
-                            $match: {
-                                   requestedBy: { $in: userIds.map((id) => new mongoose.Types.ObjectId(id)) },
-                            },
-                     },
+                     { $match: { requestedBy: { $in: userIds.map(id => new mongoose.Types.ObjectId(id)) } } },
                      {
                             $group: {
                                    _id: null,
                                    tokensRequested: { $sum: "$tokenAmount" },
-                                   tokensApproved: {
-                                          $sum: { $cond: [{ $eq: ["$status", "approved"] }, "$tokenAmount", 0] },
-                                   },
-                                   tokensPendingApproval: {
-                                          $sum: { $cond: [{ $eq: ["$status", "pending"] }, "$tokenAmount", 0] },
-                                   },
-                                   tokensRejected: {
-                                          $sum: { $cond: [{ $eq: ["$status", "rejected"] }, "$tokenAmount", 0] },
-                                   },
+                                   tokensApproved: { $sum: { $cond: [{ $eq: ["$status", "approved"] }, "$tokenAmount", 0] } },
+                                   tokensPendingApproval: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, "$tokenAmount", 0] } },
+                                   tokensRejected: { $sum: { $cond: [{ $eq: ["$status", "rejected"] }, "$tokenAmount", 0] } },
                             },
                      },
               ]);
@@ -90,9 +88,6 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                      tokensRejected: 0,
               };
 
-              // ----------------------------
-              // Response
-              // ----------------------------
               return res.json({
                      success: true,
                      data: {
@@ -113,41 +108,31 @@ export const getDashboardStats = async (req: Request, res: Response) => {
        }
 };
 
-
+// ------------------------------
+// Monthly Token Stats
+// ------------------------------
 export const getMonthlyTokenStats = async (req: Request, res: Response) => {
        try {
               const loggedInUserId = (req as any).user.id;
 
-              // Fetch logged-in user with role
               const loggedInUser = await User.findById(loggedInUserId).populate("role").lean();
               if (!loggedInUser) return res.status(404).json({ message: "User not found" });
 
               const role = await Role.findById(loggedInUser.role._id).lean();
               if (!role) return res.status(400).json({ message: "Role not found" });
 
-              // Recursive function to get all descendant user IDs
-              const getDescendantUserIds = async (userId: string): Promise<string[]> => {
-                     const children = await User.find({ createdBy: userId }).select("_id").lean();
-                     let allIds = children.map(c => c._id.toString());
-                     for (const child of children) {
-                            const subIds = await getDescendantUserIds(child._id.toString());
-                            allIds = [...allIds, ...subIds];
-                     }
-                     return allIds;
-              };
-
+              const allUsers = await User.find({}).select("_id createdBy").lean();
               let userIds: string[] = [loggedInUserId];
+
               if (!role.parentRole) {
-                     const descendantIds = await getDescendantUserIds(loggedInUserId);
+                     const descendantIds = getDescendantUserIds(allUsers, loggedInUserId);
                      userIds = [...userIds, ...descendantIds];
               }
 
-              // Get first and last day of current month
               const now = new Date();
               const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
               const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-              // Aggregate tokens per day
               const tokenStats = await Token.aggregate([
                      {
                             $match: {
@@ -167,7 +152,6 @@ export const getMonthlyTokenStats = async (req: Request, res: Response) => {
                      { $sort: { "_id": 1 } },
               ]);
 
-              // Map to array for all days of month
               const daysInMonth = lastDay.getDate();
               const data = Array.from({ length: daysInMonth }, (_, i) => {
                      const dayStat = tokenStats.find(t => t._id === i + 1);
