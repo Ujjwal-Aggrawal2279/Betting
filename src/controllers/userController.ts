@@ -68,31 +68,42 @@ export const createUser = async (req: Request, res: Response) => {
           // Send Welcome Email
           // -------------------------
           const html = `
-            <div style="font-family: Arial, sans-serif; color: #333;">
-                <h2>Welcome to BetHive, ${firstName}!</h2>
-                <p>Your account has been successfully created.</p>
-                <table style="margin-top: 20px; border-collapse: collapse;">
+          <div style="font-family: Arial, sans-serif; color: #333;">
+               <h2>Welcome to BetHive, ${firstName}!</h2>
+               <p>Your account has been successfully created.</p>
+               <table style="margin-top: 20px; border-collapse: collapse;">
                     <tr>
-                        <td style="padding: 8px; font-weight: bold;">Username:</td>
-                        <td style="padding: 8px;">${username}</td>
+                         <td style="padding: 8px; font-weight: bold;">Username:</td>
+                         <td style="padding: 8px;">${username}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px; font-weight: bold;">Password:</td>
-                        <td style="padding: 8px;">${password}</td>
+                         <td style="padding: 8px; font-weight: bold;">Password:</td>
+                         <td style="padding: 8px;">${password}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 8px; font-weight: bold;">Tokens:</td>
-                        <td style="padding: 8px;">${tokens}</td>
+                         <td style="padding: 8px; font-weight: bold;">Tokens:</td>
+                         <td style="padding: 8px;">${tokens}</td>
                     </tr>
-                </table>
-                <p style="margin-top: 20px;">Please keep this information safe.</p>
-                <p>Happy betting! 🏏</p>
-                <hr />
-                <p style="font-size: 12px; color: #999;">
+               </table>
+
+               <p style="margin-top: 20px;">You can login to your account here:</p>
+               <p>
+                    <a href="https://bethive.vercel.app/login" style="color: #4F9DFF; text-decoration: none;">Login to BetHive</a>
+               </p>
+
+               <p>If you ever forget your password, reset it here:</p>
+               <p>
+                    <a href="https://bethive.vercel.app/forgot-password" style="color: #FACC15; text-decoration: none;">Reset Password</a>
+               </p>
+
+               <p style="margin-top: 20px;">Please keep this information safe.</p>
+               <p>Happy betting! 🏏</p>
+               <hr />
+               <p style="font-size: 12px; color: #999;">
                     BetHive - Your trusted betting platform
-                </p>
-            </div>
-        `;
+               </p>
+          </div>
+          `;
 
           if (email) {
                sendEmail(email, "Your BetHive Account Details", html);
