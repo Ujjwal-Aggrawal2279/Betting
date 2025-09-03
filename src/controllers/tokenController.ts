@@ -125,9 +125,14 @@ export const updateTokenStatus = async (req: Request, res: Response) => {
                      return res.status(404).json({ message: "Requested user not found" });
               }
 
+              const approverUser = await User.findById(loggedInUserId);
+              if (!approverUser) {
+                     return res.status(404).json({ message: "Approver user not found" });
+              }
+
               const previousStatus = token.status;
 
-              // Only allow status update if pending or changing from approved to rejected
+              // Prevent invalid transitions
               if (previousStatus === "rejected" && status !== "cancelled") {
                      return res.status(400).json({ message: "Cannot change status of rejected token" });
               }
@@ -138,9 +143,19 @@ export const updateTokenStatus = async (req: Request, res: Response) => {
                      token.approvedBy = loggedInUserId;
                      token.rejectedBy = undefined;
 
-                     // Add token amount to user if it was not previously approved
+                     // Transfer tokens only if not already approved
                      if (previousStatus !== "approved") {
+                            if (approverUser.tokens < token.tokenAmount) {
+                                   return res.status(400).json({ message: "Approver does not have enough tokens" });
+                            }
+
+                            // Deduct from approver
+                            approverUser.tokens -= token.tokenAmount;
+
+                            // Give to requested user
                             requestedUser.tokens += token.tokenAmount;
+
+                            await approverUser.save();
                             await requestedUser.save();
                      }
               }
@@ -149,10 +164,12 @@ export const updateTokenStatus = async (req: Request, res: Response) => {
                      token.rejectedBy = loggedInUserId;
                      token.approvedBy = undefined;
 
-                     // Deduct token amount only if it was previously approved
                      if (previousStatus === "approved") {
-                            requestedUser.tokens -= token.tokenAmount;
-                            if (requestedUser.tokens < 0) requestedUser.tokens = 0; // safety
+                            approverUser.tokens += token.tokenAmount; 
+                            requestedUser.tokens -= token.tokenAmount; 
+                            if (requestedUser.tokens < 0) requestedUser.tokens = 0;
+
+                            await approverUser.save();
                             await requestedUser.save();
                      }
               }
@@ -165,3 +182,4 @@ export const updateTokenStatus = async (req: Request, res: Response) => {
               res.status(500).json({ message: "Server error" });
        }
 };
+
