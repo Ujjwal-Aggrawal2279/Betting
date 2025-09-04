@@ -2,9 +2,13 @@ import { Request, Response } from "express";
 import { User } from "../models/user.model";
 import { Bet } from "../models/bets.model";
 import { Role } from "../models/role.model";
+import mongoose from "mongoose";
 
 // POST /api/bets
 export const createBet = async (req: Request, res: Response) => {
+     const session = await mongoose.startSession();
+     session.startTransaction();
+
      try {
           const userId = (req as any).user?.id;
           if (!userId) {
@@ -19,7 +23,7 @@ export const createBet = async (req: Request, res: Response) => {
           }
 
           // Find user (need tokens + fullName)
-          const user = await User.findById(userId).select("fullName tokens");
+          const user = await User.findById(userId).select("fullName tokens").session(session);
           if (!user) {
                return res.status(404).json({ message: "User not found" });
           }
@@ -30,7 +34,7 @@ export const createBet = async (req: Request, res: Response) => {
                matchId,
                teamId,
                betType,
-          });
+          }).session(session);
 
           if (existingBet) {
                return res.status(400).json({ message: "You have already placed this bet" });
@@ -41,9 +45,12 @@ export const createBet = async (req: Request, res: Response) => {
                return res.status(400).json({ message: "Insufficient tokens" });
           }
 
-          // Deduct tokens
-          user.tokens -= Number(tokenAmount);
-          await user.save();
+          // Deduct tokens atomically
+          await User.findByIdAndUpdate(
+               userId,
+               { $inc: { tokens: -Number(tokenAmount) } },
+               { new: true, session }
+          );
 
           // Create new bet
           const newBet = new Bet({
@@ -58,14 +65,19 @@ export const createBet = async (req: Request, res: Response) => {
                result: "pending",
           });
 
-          await newBet.save();
+          await newBet.save({ session });
+
+          await session.commitTransaction();
+          session.endSession();
 
           return res.status(201).json({
                message: "Bet placed successfully",
                bet: newBet,
           });
+     } catch (error: any) {
+          await session.abortTransaction();
+          session.endSession();
 
-     } catch (error) {
           console.error("Error creating bet:", error);
           return res.status(500).json({ message: "Server Error" });
      }
