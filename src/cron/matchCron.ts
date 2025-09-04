@@ -19,7 +19,7 @@ export const scheduleMatchCron = (io: Server) => {
 
        // Every 5 minutes fetch odds for live/scheduled matches
        cron.schedule("*/5 * * * *", async () => {
-              console.log(`[${new Date().toISOString()}] Running every 15 minutes match odds update...`);
+              console.log(`[${new Date().toISOString()}] Running every 5 minutes match odds update...`);
               await fetchAndUpsertMatchOdds();
        })
 

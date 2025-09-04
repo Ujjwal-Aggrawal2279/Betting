@@ -30,14 +30,14 @@ export const fetchAndUpsertMatchOdds = async () => {
                                           createdBy: null,
                                           odds: {
                                                  teama: {
-                                                        teamId: data?.response?.teama?.team_id,
-                                                        teamName: data?.response?.teama?.name, 
+                                                        teamId: data?.response?.match_info?.teama?.team_id,
+                                                        teamName: data?.response?.match_info?.teama?.name, 
                                                         back: parseFloat(odds.teama.back),
                                                         lay: parseFloat(odds.teama.lay),
                                                  },
                                                  teamb: {
-                                                        teamId: data?.response?.teamb?.team_id,
-                                                        teamName: data?.response?.teamb?.name,
+                                                        teamId: data?.response?.match_info?.teamb?.team_id,
+                                                        teamName: data?.response?.match_info?.teamb?.name,
                                                         back: parseFloat(odds.teamb.back),
                                                         lay: parseFloat(odds.teamb.lay),
                                                  },
