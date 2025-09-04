@@ -18,10 +18,14 @@ import { toast } from "sonner";
 // Zod schema for validation
 const oddsSchema = z.object({
        teama: z.object({
+              teamId: z.string().optional(),
+              teamName: z.string().optional(),
               back: z.coerce.number().min(0.01, "Back must be at least 0.01"),
               lay: z.coerce.number().min(0.01, "Lay must be at least 0.01"),
        }),
        teamb: z.object({
+              teamId: z.string().optional(),
+              teamName: z.string().optional(),
               back: z.coerce.number().min(0.01, "Back must be at least 0.01"),
               lay: z.coerce.number().min(0.01, "Lay must be at least 0.01"),
        }),
@@ -50,8 +54,8 @@ const OddsSheet = ({ open, onOpenChange, odds }) => {
                      type: odds.type,
                      source: odds.source || "APP",
                      odds: {
-                            teama: { back: data.teama.back, lay: data.teama.lay },
-                            teamb: { back: data.teamb.back, lay: data.teamb.lay },
+                            teama: { teamId: odds?.odds?.teama?.teamId, teamName: odds?.odds?.teama?.teamName, back: data.teama.back, lay: data.teama.lay },
+                            teamb: { teamId: odds?.odds?.teamb?.teamId, teamName: odds?.odds?.teamb?.teamName, back: data.teamb.back, lay: data.teamb.lay },
                      },
               };
 

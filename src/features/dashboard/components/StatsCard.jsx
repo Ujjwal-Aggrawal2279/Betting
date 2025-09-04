@@ -6,13 +6,13 @@ const iconMap = {
        "Inactive Users": UserX,
        "New Users (Today)": UserPlus,
        "Live Matches": ClipboardList,
-       "Completed Matches (Today)": Trophy,
-       "Cancelled Matches (Today)": XCircle,
-       "Scheduled Matches (Today)": Hourglass,
-       "Tokens Requested (Today)": Coins,
-       "Tokens Approved (Today)": CheckCircle2,
-       "Tokens Pending (Today)": Clock3,
-       "Tokens Rejected (Today)": Ban,
+       "Completed Matches": Trophy,
+       "Cancelled Matches": XCircle,
+       "Scheduled Matches": Hourglass,
+       "Tokens Requested": Coins,
+       "Tokens Approved": CheckCircle2,
+       "Tokens Pending": Clock3,
+       "Tokens Rejected": Ban,
 };
 
 const StatsCard = ({ title, value, Icon, loading }) => {
@@ -42,13 +42,13 @@ const DashboardStats = ({ data, loading }) => {
               { title: "Inactive Users", value: data?.totalInactiveUsers },
               { title: "New Users (Today)", value: data?.newUsers },
               { title: "Live Matches", value: data?.liveMatches },
-              { title: "Completed Matches (Today)", value: data?.completedMatches },
-              { title: "Cancelled Matches (Today)", value: data?.cancelledMatches },
-              { title: "Scheduled Matches (Today)", value: data?.scheduledMatches },
-              { title: "Tokens Requested (Today)", value: data?.tokensRequested },
-              { title: "Tokens Approved (Today)", value: data?.tokensApproved },
-              { title: "Tokens Pending (Today)", value: data?.tokensPendingApproval },
-              { title: "Tokens Rejected (Today)", value: data?.tokensRejected },
+              { title: "Completed Matches", value: data?.completedMatches },
+              { title: "Cancelled Matches", value: data?.cancelledMatches },
+              { title: "Scheduled Matches", value: data?.scheduledMatches },
+              { title: "Tokens Requested", value: data?.tokensRequested },
+              { title: "Tokens Approved", value: data?.tokensApproved },
+              { title: "Tokens Pending", value: data?.tokensPendingApproval },
+              { title: "Tokens Rejected", value: data?.tokensRejected },
        ];
 
        return (

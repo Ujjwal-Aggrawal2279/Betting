@@ -3,8 +3,6 @@ import {
        Gamepad2,
        Banknote,
        Coins,
-       ChartNoAxesCombined,
-       Cog,
        UserPlus,
        CircleDollarSign,
        Lock,
@@ -17,10 +15,9 @@ const navItems = [
        { to: "/users", label: "Users", icon: UserPlus },
        { to: "/games", label: "Games", icon: Gamepad2 },
        { to: "/rates", label: "Rates", icon: CircleDollarSign },
-       // { to: "/bets", label: "Bets", icon: Banknote },
+       { to: "/bets", label: "Bets", icon: Banknote },
        { to: "/tokens", label: "Tokens", icon: Coins },
        {to: "/forgot-password", label: "Password", icon: Lock}
-       // { to: "/analytics", label: "Analytics", icon: ChartNoAxesCombined }
 ];
 
 const NavigationSidebar = () => {

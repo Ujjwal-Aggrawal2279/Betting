@@ -11,6 +11,7 @@ import GameDetailPage from "../../features/games/pages/GameDetailPage";
 import RatesPage from "../../features/rates/pages/RatesPage";
 import TokenPage from "../../features/tokens/pages/TokenPage";
 import ForgotPasswordPage from "../../features/auth/pages/ForgotPasswordPage";
+import Betspage from "../../features/bets/pages/Betspage";
 
 const router = createBrowserRouter([
        {
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
                      {
                             path: "games/:title",
                             element: <ProtectedRoute><GameDetailPage /></ProtectedRoute>
+                     },
+                     {
+                            path: "bets",
+                            element: <ProtectedRoute><Betspage /></ProtectedRoute>
                      }
               ],
        },
