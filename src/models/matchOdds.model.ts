@@ -1,6 +1,8 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IOdds {
+       teamId: string;
+       teamName: string;
        back: string;
        lay: string;
 }
@@ -11,8 +13,10 @@ export interface IMatchOdds extends Document {
        type: string;
        source: "API" | "APP";
        odds: {
-              teama: IOdds;
-              teamb: IOdds;
+              teamId: IOdds;
+              teamName: IOdds;
+              back: IOdds;
+              lay: IOdds;
        };
        createdBy?: mongoose.Types.ObjectId;
        createdAt?: Date;
@@ -21,6 +25,8 @@ export interface IMatchOdds extends Document {
 
 const OddsSchema: Schema = new Schema(
        {
+              teamId: { type: String, required: true },
+              teamName: { type: String, required: true },
               back: { type: String, required: true },
               lay: { type: String, required: true },
        },
