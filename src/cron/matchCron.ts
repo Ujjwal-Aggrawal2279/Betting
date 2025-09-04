@@ -11,14 +11,14 @@ export const scheduleMatchCron = (io: Server) => {
               await fetchAndUpsertMatches(io);
        });
 
-       // Every half an hour fetch for new/updated matches
-       cron.schedule("30 * * * *", async () => {
-              console.log(`[${new Date().toISOString()}] Running half-hourly match update...`);
+       // Every 10 mins fetch for new/updated matches
+       cron.schedule("*/10 * * * *", async () => {
+              console.log(`[${new Date().toISOString()}] Running every 10 mins match update...`);
               await fetchAndUpsertMatches(io);
        });
 
-       // Every 15 minutes fetch odds for live/scheduled matches
-       cron.schedule("*/15 * * * *", async () => {
+       // Every 5 minutes fetch odds for live/scheduled matches
+       cron.schedule("*/5 * * * *", async () => {
               console.log(`[${new Date().toISOString()}] Running every 15 minutes match odds update...`);
               await fetchAndUpsertMatchOdds();
        })

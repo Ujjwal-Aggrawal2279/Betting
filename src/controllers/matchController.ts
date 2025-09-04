@@ -104,9 +104,18 @@ export const getMatchOdds = async (req: Request, res: Response) => {
                      .lean<PopulatedMatchOdds[]>();
 
               const matchIds = [...new Set(oddsData.map(o => o.matchId))];
-              const matches = await matchModel.find({ matchId: { $in: matchIds } }).lean<IMatch[]>();
 
-              const matchMap: Record<string, IMatch> = matches.reduce((acc, match) => {
+              // 🔥 Fetch matches from both live + historical
+              const [liveMatches, historicalMatches] = await Promise.all([
+                     matchModel.find({ matchId: { $in: matchIds } }).lean<IMatch[]>(),
+                     historicalMatchModel.find({ matchId: { $in: matchIds } }).lean<IMatch[]>(),
+              ]);
+
+              // Merge both arrays into one
+              const allMatches = [...liveMatches, ...historicalMatches];
+
+              // Build map for quick lookup
+              const matchMap: Record<string, IMatch> = allMatches.reduce((acc, match) => {
                      acc[match.matchId] = match;
                      return acc;
               }, {} as Record<string, IMatch>);
@@ -116,6 +125,7 @@ export const getMatchOdds = async (req: Request, res: Response) => {
                      matchId: odds.matchId,
                      matchName: matchMap[odds.matchId]?.title || "Unknown Match",
                      type: odds.type,
+                     matchStatus: matchMap[odds.matchId]?.status || "Unknown Status",
                      source: odds.source,
                      odds: odds.odds,
                      createdBy: odds.createdBy?.fullName || null,
@@ -127,6 +137,7 @@ export const getMatchOdds = async (req: Request, res: Response) => {
               return res.status(500).json({ message: "Server Error" });
        }
 };
+
 
 // Create Match Odds
 export const createMatchOdds = async (req: Request, res: Response) => {
