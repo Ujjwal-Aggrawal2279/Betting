@@ -11,7 +11,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
      if (!authHeader?.startsWith("Bearer ")) {
           return res.status(401).json({ message: "Unauthorized" });
      }
-
+     
      const token = authHeader.split(" ")[1];
 
      try {

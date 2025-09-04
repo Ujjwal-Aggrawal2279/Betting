@@ -154,8 +154,8 @@ export const createMatchOdds = async (req: Request, res: Response) => {
                      type,
                      source: "APP",
                      odds: {
-                            teama: { back: odds.teama.back, lay: odds.teama.lay },
-                            teamb: { back: odds.teamb.back, lay: odds.teamb.lay },
+                            teama: { teamId: odds.teama.teamId , teamName: odds.teama.teamName, back: odds.teama.back, lay: odds.teama.lay },
+                            teamb: { teamId: odds.teamb.teamId , teamName: odds.teamb.teamName, back: odds.teamb.back, lay: odds.teamb.lay },
                      },
                      createdBy: userId,
               };

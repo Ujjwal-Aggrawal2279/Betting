@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Types, model } from "mongoose";
 
 export type BetResult = "won" | "lost" | "pending";
-export type BetType = "matchOdds" | "tiedMatch";
+export type BetType = "matchodds" | "tiedmatch";
 
 export interface IBet extends Document {
      _id: Types.ObjectId;
@@ -11,6 +11,7 @@ export interface IBet extends Document {
      tokenAmount: number;
      rate: number;
      result: BetResult;
+     betType: string;
      type: BetType;
      user: Types.ObjectId;
      createdAt: Date;
@@ -29,9 +30,14 @@ const BetSchema = new Schema<IBet>(
                enum: ["won", "lost", "pending"],
                default: "pending"
           },
+          betType: {
+               type: String,
+               enum: ["lay", "back"],
+               required: true
+          },
           type: {
                type: String,
-               enum: ["matchOdds", "tiedMatch"],
+               enum: ["matchodds", "tiedmatch"],
                required: true
           },
           user: { type: Schema.Types.ObjectId, ref: "User", required: true },

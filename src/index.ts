@@ -12,6 +12,7 @@ import userRoutes from "./routes/userRoutes";
 import matchRoutes from "./routes/matchRoutes";
 import tokenRoutes from "./routes/tokenRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
+import betRoutes from "./routes/betsRoutes"
 
 // Load environment variables
 dotenv.config();
@@ -33,7 +34,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
-app.use("/api", [authRoutes, roleRoutes, userRoutes, matchRoutes, tokenRoutes, dashboardRoutes]);
+app.use("/api", [authRoutes, roleRoutes, userRoutes, matchRoutes, tokenRoutes, dashboardRoutes, betRoutes]);
 
 // DB Connection
 connectDB();
