@@ -1,17 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import GameCard from "./GameCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OctagonAlert } from "lucide-react";
 import { fetchMatches } from "../../../store/slices/matchSlice";
-import {
-       connectSocket,
-       disconnectSocket,
-       getMatches,
-       onMatchesUpdated,
-} from "../../../services/socket-client";
+import { connectSocket, disconnectSocket, getMatches, onMatchesUpdated } from "../../../services/socket-client";
+import GameCard from "../../games/components/GameCard";
 
-const CategoryTabs = () => {
+const GamesSection = () => {
        const dispatch = useDispatch();
        const { matches, loading, error } = useSelector((state) => state.match);
        const [activeTab, setActiveTab] = useState("live");
@@ -21,9 +16,6 @@ const CategoryTabs = () => {
        const statusMap = useMemo(
               () => ({
                      live: "Live",
-                     scheduled: "Scheduled",
-                     completed: "Completed",
-                     cancelled: "Cancelled",
               }),
               []
        );
@@ -71,7 +63,7 @@ const CategoryTabs = () => {
        }, [currentStatus, dispatch]);
 
        return (
-              <div className="relative">
+              <div className="relative h-full 2xl:w-[70%] xl:w-[68%] lg:w-[55%] px-2">
                      {syncMessage && (
                             <div className="absolute top-0 right-0 m-4 p-2 bg-green-600 text-white rounded-md shadow-lg z-50">
                                    {syncMessage}
@@ -85,7 +77,7 @@ const CategoryTabs = () => {
                             onValueChange={setActiveTab}
                      >
                             {/* Tab Buttons */}
-                            <TabsList className="grid grid-cols-4 gap-2 bg-[#1f2133] p-1 rounded-lg">
+                            <TabsList className="grid grid-cols-1 bg-[#1f2133] p-1 rounded-lg">
                                    {Object.keys(statusMap).map((tab) => (
                                           <TabsTrigger
                                                  key={tab}
@@ -100,7 +92,7 @@ const CategoryTabs = () => {
                             {/* Tab Contents */}
                             <TabsContent
                                    value={activeTab}
-                                   className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4"
+                                   className="grid grid-cols-1 xl:grid-cols-2 gap-4"
                             >
                                    {loading ? (
                                           <p className="text-white col-span-full">Loading...</p>
@@ -133,4 +125,4 @@ const CategoryTabs = () => {
        );
 };
 
-export default CategoryTabs;
+export default GamesSection;
