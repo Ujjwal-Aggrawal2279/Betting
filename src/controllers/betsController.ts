@@ -37,22 +37,43 @@ export const createBet = async (req: Request, res: Response) => {
           }).session(session);
 
           if (existingBet) {
-               return res.status(400).json({ message: "You have already placed this bet" });
+               // Check if user has enough tokens for additional bet
+               if (user.tokens < tokenAmount) {
+                    return res.status(400).json({ message: "Insufficient tokens" });
+               }
+
+               // Deduct tokens
+               await User.findByIdAndUpdate(
+                    userId,
+                    { $inc: { tokens: -Number(tokenAmount) } },
+                    { new: true, session }
+               );
+
+               // Update existing bet
+               existingBet.tokenAmount += Number(tokenAmount);
+               existingBet.rate = Number(rate);
+               await existingBet.save({ session });
+
+               await session.commitTransaction();
+               session.endSession();
+
+               return res.status(200).json({
+                    message: "Bet updated successfully",
+                    bet: existingBet,
+               });
           }
 
-          // Check if user has enough tokens
+          // If no existing bet → create new one
           if (user.tokens < tokenAmount) {
                return res.status(400).json({ message: "Insufficient tokens" });
           }
 
-          // Deduct tokens atomically
           await User.findByIdAndUpdate(
                userId,
                { $inc: { tokens: -Number(tokenAmount) } },
                { new: true, session }
           );
 
-          // Create new bet
           const newBet = new Bet({
                matchId,
                teamId,
@@ -78,10 +99,11 @@ export const createBet = async (req: Request, res: Response) => {
           await session.abortTransaction();
           session.endSession();
 
-          console.error("Error creating bet:", error);
+          console.error("Error creating/updating bet:", error);
           return res.status(500).json({ message: "Server Error" });
      }
 };
+
 
 // Get bets list
 export const getBetsList = async (req: Request, res: Response) => {
