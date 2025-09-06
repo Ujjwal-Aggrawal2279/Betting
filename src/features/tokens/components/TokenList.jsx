@@ -22,6 +22,7 @@ import {
        fetchTokens,
        updateTokenStatus,
 } from "../../../store/slices/tokenSlice";
+import { toast } from "sonner";
 
 const TokenList = () => {
        const dispatch = useDispatch();
@@ -36,8 +37,14 @@ const TokenList = () => {
               dispatch(fetchTokens(page));
        }, [dispatch, page]);
 
-       const handleUpdateStatus = (tokenId, status) => {
-              dispatch(updateTokenStatus({ tokenId, status }));
+       const handleUpdateStatus = async (tokenId, status) => {
+              const response = await dispatch(updateTokenStatus({ tokenId, status }));
+              console.log(response)
+              if (response?.meta?.requestStatus === "fulfilled") {
+                     toast.success("Token status updated successfully");
+              } else {
+                     toast.error(response?.payload);
+              }
        };
 
        const pageData = tokens || [];
