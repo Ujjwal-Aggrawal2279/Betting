@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model";
 import { LoginActivity } from "../models/loginActivity.model";
+import { sendEmail } from "../config/mailer";
 
 // Login Controller
 export const loginUser = async (req: Request, res: Response) => {
@@ -141,11 +142,11 @@ export const forgotPassword = async (req: Request, res: Response) => {
                return res.status(400).json({ message: "Both old and new passwords are required" });
           }
 
-          // Fetch the user
+          // Fetch user
           const user = await User.findById(userId);
           if (!user) return res.status(404).json({ message: "User not found" });
 
-          // Check if old password matches
+          // Check old password
           const isMatch = await bcrypt.compare(oldPassword, user.password);
           if (!isMatch) {
                return res.status(401).json({ message: "Old password is incorrect" });
@@ -154,13 +155,60 @@ export const forgotPassword = async (req: Request, res: Response) => {
           // Hash new password
           const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-          // Update user password
+          // Update password
           user.password = hashedPassword;
           await user.save();
 
-          return res.status(200).json({ message: "Password updated successfully" });
+          // -------------------------
+          // Send Password Change Email (with new password)
+          // -------------------------
+          if (user.email) {
+               const html = `
+            <div style="font-family: Arial, sans-serif; color: #333;">
+                <h2>Hello ${user.firstName},</h2>
+                <p>Your BetHive account password has been successfully changed.</p>
+                
+                <table style="margin-top: 20px; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8px; font-weight: bold;">Username:</td>
+                        <td style="padding: 8px;">${user.username}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-weight: bold;">New Password:</td>
+                        <td style="padding: 8px;">${newPassword}</td>
+                    </tr>
+                </table>
+
+                <p style="margin-top: 20px;">You can login to your account here:</p>
+                <p>
+                    <a href="https://bethive.vercel.app/login" 
+                       style="color: #4F9DFF; text-decoration: none;">
+                       Login to BetHive
+                    </a>
+                </p>
+
+                <p>If you did not request this change, reset your password immediately:</p>
+                <p>
+                    <a href="https://bethive.vercel.app/forgot-password" 
+                       style="color: #FACC15; text-decoration: none;">
+                       Reset Password
+                    </a>
+                </p>
+
+                <hr />
+                <p style="font-size: 12px; color: #999;">
+                    BetHive - Your trusted betting platform
+                </p>
+            </div>
+            `;
+
+               await sendEmail(user.email, "Your BetHive Password Changed", html);
+          }
+
+          return res.status(200).json({ message: "Password updated successfully and email sent" });
      } catch (err) {
           console.error("❌ Error in forgotPassword:", err);
           return res.status(500).json({ message: "Server error" });
      }
 };
+
