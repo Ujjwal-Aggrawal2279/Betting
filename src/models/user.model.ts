@@ -11,11 +11,12 @@ export interface IUser extends Document {
      password: string;
      enabled: boolean;
      isLoggedIn: boolean;
+     currentToken?: string | null;
      role: Types.ObjectId | IRole;
      permissions: string[];
      profilePic?: string;
      tokens: number;
-     createdBy: mongoose.Types.ObjectId
+     createdBy: mongoose.Types.ObjectId;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -28,6 +29,7 @@ const UserSchema = new Schema<IUser>(
           password: { type: String, required: true },
           enabled: { type: Boolean, default: true },
           isLoggedIn: { type: Boolean, default: false },
+          currentToken: { type: String, default: null },
           role: { type: Schema.Types.ObjectId, ref: "Role", required: true },
           permissions: [
                {
@@ -42,7 +44,7 @@ const UserSchema = new Schema<IUser>(
                          "edit_user",
                          "delete_user",
                          "view_user",
-                         "impersonate_user"
+                         "impersonate_user",
                     ],
                },
           ],
@@ -52,7 +54,7 @@ const UserSchema = new Schema<IUser>(
                type: mongoose.Schema.Types.ObjectId,
                ref: "User",
                required: true,
-          }
+          },
      },
      { timestamps: true }
 );
@@ -65,5 +67,6 @@ UserSchema.pre("save", function (next) {
 
 // Indexing
 UserSchema.index({ role: 1, createdBy: 1 });
+UserSchema.index({ currentToken: 1 });
 
 export const User = model<IUser>("User", UserSchema);

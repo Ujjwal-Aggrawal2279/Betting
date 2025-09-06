@@ -15,32 +15,26 @@ export const loginUser = async (req: Request, res: Response) => {
                return res.status(400).json({ message: "Username and password are required" });
           }
 
-          // Find user
           const user = await User.findOne({ username }).populate("role");
           if (!user) {
                return res.status(401).json({ message: "Invalid username or password" });
           }
 
-          // Check password
           const isMatch = await bcrypt.compare(password, user.password);
           if (!isMatch) {
                return res.status(401).json({ message: "Invalid username or password" });
           }
 
-          // 🚫 Prevent multiple logins
-          if (user.isLoggedIn) {
-               return res.status(403).json({ message: "User already logged in on another device" });
-          }
-
-          // Generate token
+          // Generate new token
           const token = jwt.sign(
                { id: user._id },
                process.env.JWT_SECRET_KEY as string,
                { expiresIn: "1d" }
           );
 
-          // Mark user as logged in
+          // Invalidate old session (force logout previous device)
           user.isLoggedIn = true;
+          user.currentToken = token;
           await user.save();
 
           // Record login activity
@@ -48,14 +42,9 @@ export const loginUser = async (req: Request, res: Response) => {
           if (ipAddress.includes(",")) ipAddress = ipAddress.split(",")[0].trim();
           if (ipAddress.startsWith("::ffff:")) ipAddress = ipAddress.replace("::ffff:", "");
 
-          let geo = geoip.lookup(ipAddress);
-          let lat: number | undefined = geo?.ll[0];
-          let lng: number | undefined = geo?.ll[1];
-
-          if (!lat || !lng) {
-               lat = 0;
-               lng = 0;
-          }
+          const geo = geoip.lookup(ipAddress);
+          const lat = geo?.ll?.[0] ?? 0;
+          const lng = geo?.ll?.[1] ?? 0;
 
           await LoginActivity.create({
                userId: user._id,
@@ -76,31 +65,26 @@ export const loginUser = async (req: Request, res: Response) => {
 };
 
 
-
 // Logout Controller
 export const logoutUser = async (req: Request, res: Response) => {
      try {
           const userId = (req as any).user?.id;
           if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-          // Mark user as logged out
           const user = await User.findById(userId);
-          if (!user) {
-               return res.status(404).json({ message: "User not found" });
-          }
+          if (!user) return res.status(404).json({ message: "User not found" });
 
           user.isLoggedIn = false;
+          user.currentToken = null;
           await user.save();
 
-          // IP handling
           let ipAddress = req.headers["x-forwarded-for"]?.toString() || req.ip || "";
           if (ipAddress.includes(",")) ipAddress = ipAddress.split(",")[0].trim();
           if (ipAddress.startsWith("::ffff:")) ipAddress = ipAddress.replace("::ffff:", "");
 
-          // Geo lookup
           const geo = geoip.lookup(ipAddress);
-          let lat = geo?.ll?.[0] ?? 0;
-          let lng = geo?.ll?.[1] ?? 0;
+          const lat = geo?.ll?.[0] ?? 0;
+          const lng = geo?.ll?.[1] ?? 0;
 
           await LoginActivity.create({
                userId,
