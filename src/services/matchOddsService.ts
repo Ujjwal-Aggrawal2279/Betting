@@ -2,6 +2,11 @@ import axios from "axios";
 import matchModel from "../models/match.model";
 import matchOddsModel from "../models/matchOdds.model";
 
+const safeParse = (val: any): number => {
+       const num = parseFloat(val);
+       return isNaN(num) ? 0 : num;
+};
+
 export const fetchAndUpsertMatchOdds = async () => {
        try {
               const matches = await matchModel.find({ status: { $in: ["Scheduled", "Live"] } });
@@ -31,24 +36,20 @@ export const fetchAndUpsertMatchOdds = async () => {
                                           odds: {
                                                  teama: {
                                                         teamId: data?.response?.match_info?.teama?.team_id,
-                                                        teamName: data?.response?.match_info?.teama?.name, 
-                                                        back: parseFloat(odds.teama.back),
-                                                        lay: parseFloat(odds.teama.lay),
+                                                        teamName: data?.response?.match_info?.teama?.name,
+                                                        back: safeParse(odds.teama.back),
+                                                        lay: safeParse(odds.teama.lay),
                                                  },
                                                  teamb: {
                                                         teamId: data?.response?.match_info?.teamb?.team_id,
                                                         teamName: data?.response?.match_info?.teamb?.name,
-                                                        back: parseFloat(odds.teamb.back),
-                                                        lay: parseFloat(odds.teamb.lay),
+                                                        back: safeParse(odds.teamb.back),
+                                                        lay: safeParse(odds.teamb.lay),
                                                  },
                                           },
                                    };
 
-                                   await matchOddsModel.findOneAndUpdate(
-                                          filter,
-                                          { $set: update },
-                                          { upsert: true, new: true }
-                                   );
+                                   await matchOddsModel.findOneAndUpdate(filter, { $set: update }, { upsert: true, new: true });
                             }
 
                             console.log(`✅ Updated odds for match ${match.matchId}`);
