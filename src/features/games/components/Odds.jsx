@@ -52,7 +52,7 @@ const Odds = ({ matchId }) => {
        const renderOddCard = (o, isApp = true) => (
               <div
                      key={o.id}
-                     onClick={() => isApp && setSelectedOdds(o)}
+                     onClick={() => setSelectedOdds(o)}
                      className={`mb-4 p-4 rounded-xl backdrop-blur-md border border-white/10 shadow-xl 
         hover:scale-[1.02] transition-transform duration-300 
         ${isApp ? "cursor-pointer" : "cursor-default"} 
