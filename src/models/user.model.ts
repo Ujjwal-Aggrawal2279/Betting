@@ -40,6 +40,7 @@ const UserSchema = new Schema<IUser>(
                          "edit_role",
                          "delete_role",
                          "role_permissions_manager",
+                         "token_manager",
                          "create_user",
                          "edit_user",
                          "delete_user",
