@@ -24,6 +24,7 @@ import UserDetailSheet from "./UserDetailSheet";
 import UserDeleteAlert from "./UserDeleteAlert";
 import { toast } from "sonner";
 import { deleteUser } from "../../../store/slices/userSlice";
+import UserManageTokens from "./UserManageTokens";
 
 export default function UserList() {
        const dispatch = useDispatch();
@@ -35,6 +36,7 @@ export default function UserList() {
        const [selectedUserId, setSelectedUserId] = useState(null);
        const [isSheetOpen, setIsSheetOpen] = useState(false);
        const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+       const [openManageTokensDialog, setOpenManageTokensDialog] = useState(false);
 
        // Fetch users whenever page changes
        useEffect(() => {
@@ -68,6 +70,15 @@ export default function UserList() {
        const handleDeleteDialogClose = () => {
               setOpenDeleteDialog(false);
        };
+
+       const handleManageTokens = (userId) => {
+              setSelectedUserId(userId);
+              setOpenManageTokensDialog(true);
+       }
+
+       const handleManageTokensDialogClose = () => {
+              setOpenManageTokensDialog(false);
+       }
 
        const handleDeleteUser = async (userId) => {
               try {
@@ -179,6 +190,12 @@ export default function UserList() {
                                                                              >
                                                                                     Delete
                                                                              </DropdownMenuItem>
+                                                                             {permissions.includes("token_manager") && <DropdownMenuItem
+                                                                                    className="hover:bg-amber-500/30 cursor-pointer"
+                                                                                    onClick={() => handleManageTokens(user._id)}
+                                                                             >
+                                                                                    Manage tokens
+                                                                             </DropdownMenuItem>}
                                                                       </DropdownMenuContent>
                                                                </DropdownMenu>
                                                         </TableCell>
@@ -225,6 +242,11 @@ export default function UserList() {
                      {selectedUserId && (
                             <UserDeleteAlert userId={selectedUserId} isOpen={openDeleteDialog} onClose={handleDeleteDialogClose} onDelete={handleDeleteUser} />
                      )}
+
+                     {/* Conditionally Render ManageTokensDialog */}
+                     {selectedUserId &&
+                            <UserManageTokens userId={selectedUserId} isOpen={openManageTokensDialog} onClose={handleManageTokensDialogClose} />
+                     }
               </div>
        );
 }

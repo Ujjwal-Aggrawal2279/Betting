@@ -11,10 +11,12 @@ import AppLoader from "./components/loaders/AppLoader";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
-      <PersistGate loading={<AppLoader />} persistor={persistor}>
-        <Suspense fallback={<AppLoader />}>
-          <RouterProvider router={router} />
-        </Suspense>
+      <PersistGate loading={<AppLoader showLoader />} persistor={persistor}>
+        <AppLoader>
+          <Suspense fallback={<AppLoader showLoader />}>
+            <RouterProvider router={router} />
+          </Suspense>
+        </AppLoader>
       </PersistGate>
     </Provider>
   </StrictMode>

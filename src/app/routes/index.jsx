@@ -36,7 +36,7 @@ const router = createBrowserRouter([
                      },
                      {
                             path: "users",
-                            element: <ProtectedRoute><UserPage /></ProtectedRoute>
+                            element: <ProtectedRoute requiredPermissions={["view_user"]}><UserPage /></ProtectedRoute>
                      },
                      {
                             path: "roles",

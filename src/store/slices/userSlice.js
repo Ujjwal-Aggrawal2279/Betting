@@ -97,6 +97,29 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
+// Manage tokens
+export const manageUserTokens = createAsyncThunk(
+  "users/manageUserTokens",
+  async ({ userId, action, amount }, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      const { data } = await http.post(
+        `/users/${userId}/tokens`,
+        { action, amount },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      return { userId, tokens: data.tokens, message: data.message };
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: "users",
   initialState: {
@@ -167,11 +190,31 @@ const userSlice = createSlice({
         state.updateError = action.payload;
       })
       // deleteUser
-      .addCase(deleteUser.pending, (state) => {
+      .addCase(deleteUser.pending, (state) => {})
+      .addCase(deleteUser.fulfilled, (state, action) => {})
+      .addCase(deleteUser.rejected, (state, action) => {})
+      // manage tokens
+      .addCase(manageUserTokens.pending, (state) => {
+        state.updating = true;
+        state.updateError = null;
       })
-      .addCase(deleteUser.fulfilled, (state, action) => {
+      .addCase(manageUserTokens.fulfilled, (state, action) => {
+        state.updating = false;
+        // Update the user's token in the list if exists
+        const userIndex = state.list.findIndex(
+          (u) => u._id === action.payload.userId
+        );
+        if (userIndex !== -1) {
+          state.list[userIndex].tokens = action.payload.tokens;
+        }
+        // If currently viewing single user
+        if (state.user && state.user._id === action.payload.userId) {
+          state.user.tokens = action.payload.tokens;
+        }
       })
-      .addCase(deleteUser.rejected, (state, action) => {
+      .addCase(manageUserTokens.rejected, (state, action) => {
+        state.updating = false;
+        state.updateError = action.payload;
       });
   },
 });
