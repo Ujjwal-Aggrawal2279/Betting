@@ -1,20 +1,23 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import http from "../../services/http";
 
-// Fetch users
+// Fetch users with filters
 export const fetchUsers = createAsyncThunk(
   "users/fetchUsers",
-  async (page = 1, { rejectWithValue, getState }) => {
+  async (
+    { page = 1, role = "all", fullName = "" },
+    { rejectWithValue, getState }
+  ) => {
     try {
       const { auth } = getState();
       const token = auth.token;
 
       const { data } = await http.get("/getUsers", {
         headers: { Authorization: `Bearer ${token}` },
-        params: { page, limit: 15 },
+        params: { page, limit: 15, role, fullName },
       });
 
-      return data.data || [];
+      return data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }

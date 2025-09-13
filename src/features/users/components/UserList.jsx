@@ -7,13 +7,20 @@ import {
        TableHeader,
        TableRow,
 } from "@/components/ui/table";
+import {
+       Select,
+       SelectContent,
+       SelectItem,
+       SelectTrigger,
+       SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader, Plus, MoreHorizontal } from "lucide-react";
 import AddUserSheet from "./AddUserSheet";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchUsers } from "@/store/slices/userSlice";
+import { fetchUsers, deleteUser } from "@/store/slices/userSlice";
 import {
        DropdownMenu,
        DropdownMenuContent,
@@ -23,13 +30,15 @@ import {
 import UserDetailSheet from "./UserDetailSheet";
 import UserDeleteAlert from "./UserDeleteAlert";
 import { toast } from "sonner";
-import { deleteUser } from "../../../store/slices/userSlice";
 import UserManageTokens from "./UserManageTokens";
+import { Input } from "@/components/ui/input";
+import { fetchRoles } from "../../../store/slices/roleSlice";
 
 export default function UserList() {
        const dispatch = useDispatch();
        const permissions = useSelector((state) => state.auth.permissions);
        const { list: users, loading } = useSelector((state) => state.users);
+       const { list: roles } = useSelector((state) => state.roles);
 
        const [page, setPage] = useState(1);
        const rowsPerPage = 15;
@@ -38,12 +47,25 @@ export default function UserList() {
        const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
        const [openManageTokensDialog, setOpenManageTokensDialog] = useState(false);
 
-       // Fetch users whenever page changes
-       useEffect(() => {
-              dispatch(fetchUsers(page));
-       }, [dispatch, page]);
+       // 🔹 Filters
+       const [roleFilter, setRoleFilter] = useState("all");
+       const [nameFilter, setNameFilter] = useState("");
 
-       const pageData = users || [];
+       // Fetch roles on mount
+       useEffect(() => {
+              dispatch(fetchRoles());
+       }, [dispatch]);
+
+       // Fetch users when page/filters change
+       useEffect(() => {
+              const delayDebounce = setTimeout(() => {
+                     dispatch(fetchUsers({ page, role: roleFilter, fullName: nameFilter }));
+              }, 400);
+
+              return () => clearTimeout(delayDebounce);
+       }, [dispatch, page, roleFilter, nameFilter]);
+
+       const pageData = users?.data || [];
        const totalPages = users?.total ? Math.ceil(users.total / rowsPerPage) : 1;
 
        if (loading)
@@ -58,33 +80,16 @@ export default function UserList() {
               setIsSheetOpen(true);
        };
 
-       const handleSheetClose = () => {
-              setIsSheetOpen(false);
-       };
-
        const handleDeleteAlert = (userId) => {
               setSelectedUserId(userId);
               setOpenDeleteDialog(true);
        };
 
-       const handleDeleteDialogClose = () => {
-              setOpenDeleteDialog(false);
-       };
-
-       const handleManageTokens = (userId) => {
-              setSelectedUserId(userId);
-              setOpenManageTokensDialog(true);
-       }
-
-       const handleManageTokensDialogClose = () => {
-              setOpenManageTokensDialog(false);
-       }
-
        const handleDeleteUser = async (userId) => {
               try {
                      const response = await dispatch(deleteUser(userId));
                      if (response) {
-                            dispatch(fetchUsers(page));
+                            dispatch(fetchUsers({ page, role: roleFilter, fullName: nameFilter }));
                             toast.success(response.payload.message);
                             setOpenDeleteDialog(false);
                      } else {
@@ -93,7 +98,12 @@ export default function UserList() {
               } catch (error) {
                      toast.error(error.message || "Failed to delete user");
               }
-       }
+       };
+
+       const handleManageTokens = (userId) => {
+              setSelectedUserId(userId);
+              setOpenManageTokensDialog(true);
+       };
 
        return (
               <div className="p-6 text-white font-display">
@@ -101,14 +111,38 @@ export default function UserList() {
                      <div className="flex items-center justify-between mb-6">
                             <h1 className="text-2xl font-bold tracking-tight">Users</h1>
                             {permissions.includes("create_user") && (
-                                   <div>
-                                          <AddUserSheet>
-                                                 <Button className="bg-amber-500 text-black font-semibold hover:bg-amber-400 cursor-pointer rounded-xl shadow-sm flex items-center">
-                                                        <Plus className="mr-2 h-4 w-4" /> Add User
-                                                 </Button>
-                                          </AddUserSheet>
-                                   </div>
+                                   <AddUserSheet>
+                                          <Button className="bg-amber-500 text-black font-semibold hover:bg-amber-400 cursor-pointer rounded-xl shadow-sm flex items-center">
+                                                 <Plus className="mr-2 h-4 w-4" /> Add User
+                                          </Button>
+                                   </AddUserSheet>
                             )}
+                     </div>
+
+                     {/* 🔹 Filters */}
+                     <div className="flex items-center gap-4 mb-4">
+                            {/* Role Filter */}
+                            <Select value={roleFilter} onValueChange={setRoleFilter}>
+                                   <SelectTrigger className="w-[180px]">
+                                          <SelectValue placeholder="Filter by role" />
+                                   </SelectTrigger>
+                                   <SelectContent>
+                                          <SelectItem value="all">All Roles</SelectItem>
+                                          {roles.map((role) => (
+                                                 <SelectItem key={role.value} value={role.value}>
+                                                        {role.label}
+                                                 </SelectItem>
+                                          ))}
+                                   </SelectContent>
+                            </Select>
+
+                            {/* Fullname Filter */}
+                            <Input
+                                   className="w-[250px]"
+                                   placeholder="Search by full name"
+                                   value={nameFilter}
+                                   onChange={(e) => setNameFilter(e.target.value)}
+                            />
                      </div>
 
                      {/* Table Card */}
@@ -150,7 +184,7 @@ export default function UserList() {
                                                         className={`transition-colors border-b border-white/[0.06] ${idx % 2 === 0 ? "bg-[#1E2233]" : "bg-[#20263A]"
                                                                } hover:bg-white/5`}
                                                  >
-                                                        <TableCell className="align-middle">
+                                                        <TableCell>
                                                                <Checkbox aria-label={`Select ${user._id}`} />
                                                         </TableCell>
                                                         <TableCell className="text-white/90 font-medium">{idx + 1}</TableCell>
@@ -190,12 +224,14 @@ export default function UserList() {
                                                                              >
                                                                                     Delete
                                                                              </DropdownMenuItem>
-                                                                             {permissions.includes("token_manager") && <DropdownMenuItem
-                                                                                    className="hover:bg-amber-500/30 cursor-pointer"
-                                                                                    onClick={() => handleManageTokens(user._id)}
-                                                                             >
-                                                                                    Manage tokens
-                                                                             </DropdownMenuItem>}
+                                                                             {permissions.includes("token_manager") && (
+                                                                                    <DropdownMenuItem
+                                                                                           className="hover:bg-amber-500/30 cursor-pointer"
+                                                                                           onClick={() => handleManageTokens(user._id)}
+                                                                                    >
+                                                                                           Manage tokens
+                                                                                    </DropdownMenuItem>
+                                                                             )}
                                                                       </DropdownMenuContent>
                                                                </DropdownMenu>
                                                         </TableCell>
@@ -204,7 +240,7 @@ export default function UserList() {
                                    </TableBody>
                             </Table>
 
-                            {/* Footer / Pagination */}
+                            {/* Pagination */}
                             <div className="flex items-center justify-between p-4 gap-3 bg-[#1C2131] border-t border-white/[0.06]">
                                    <Button
                                           size="sm"
@@ -233,20 +269,29 @@ export default function UserList() {
                             </div>
                      </div>
 
-                     {/* Conditionally Render UserDetailSheet */}
+                     {/* User Detail Sheet */}
                      {selectedUserId && (
-                            <UserDetailSheet userId={selectedUserId} isOpen={isSheetOpen} onClose={handleSheetClose} />
+                            <UserDetailSheet userId={selectedUserId} isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} />
                      )}
 
-                     {/* Conditionally Render DeleteUserAlert */}
+                     {/* Delete User Alert */}
                      {selectedUserId && (
-                            <UserDeleteAlert userId={selectedUserId} isOpen={openDeleteDialog} onClose={handleDeleteDialogClose} onDelete={handleDeleteUser} />
+                            <UserDeleteAlert
+                                   userId={selectedUserId}
+                                   isOpen={openDeleteDialog}
+                                   onClose={() => setOpenDeleteDialog(false)}
+                                   onDelete={handleDeleteUser}
+                            />
                      )}
 
-                     {/* Conditionally Render ManageTokensDialog */}
-                     {selectedUserId &&
-                            <UserManageTokens userId={selectedUserId} isOpen={openManageTokensDialog} onClose={handleManageTokensDialogClose} />
-                     }
+                     {/* Manage Tokens */}
+                     {selectedUserId && (
+                            <UserManageTokens
+                                   userId={selectedUserId}
+                                   isOpen={openManageTokensDialog}
+                                   onClose={() => setOpenManageTokensDialog(false)}
+                            />
+                     )}
               </div>
        );
 }
