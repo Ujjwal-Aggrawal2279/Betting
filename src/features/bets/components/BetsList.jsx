@@ -37,6 +37,7 @@ const BetsList = () => {
                                    </TableHead>
                                    <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">ID</TableHead>
                                    <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Full Name</TableHead>
+                                   <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Match</TableHead>
                                    <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Team</TableHead>
                                    <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Token Amount</TableHead>
                                    <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Type</TableHead>
@@ -74,7 +75,8 @@ const BetsList = () => {
                                         </TableCell>
                                         <TableCell className="text-gray-300 text-sm">{idx + 1}</TableCell>
                                         <TableCell className="text-gray-300 text-sm">{bet.fullName}</TableCell>
-                                        <TableCell className="text-gray-300 text-sm">{bet.teamId}</TableCell>
+                                        <TableCell className="text-gray-300 text-sm">{bet.matchTitle}</TableCell>
+                                        <TableCell className="text-gray-300 text-sm">{bet.teamName}</TableCell>
                                         <TableCell className="text-gray-300 text-sm">{bet.tokenAmount}</TableCell>
                                         <TableCell className="text-gray-300 text-sm">{bet.betType}</TableCell>
                                         <TableCell className="text-gray-300 text-sm">{bet.rate}</TableCell>
