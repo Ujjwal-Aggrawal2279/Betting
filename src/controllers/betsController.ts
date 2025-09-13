@@ -3,6 +3,9 @@ import { User } from "../models/user.model";
 import { Bet } from "../models/bets.model";
 import { Role } from "../models/role.model";
 import mongoose from "mongoose";
+import historicalmatchModel, { IHistoricalMatch } from "../models/historicalmatch.model";
+import matchModel, { IMatch } from "../models/match.model";
+import matchOddsModel, { IMatchOdds } from "../models/matchOdds.model";
 
 // POST /api/bets
 export const createBet = async (req: Request, res: Response) => {
@@ -106,6 +109,10 @@ export const createBet = async (req: Request, res: Response) => {
 
 
 // Get bets list
+interface MatchTitleDoc {
+     title: string;
+}
+
 export const getBetsList = async (req: Request, res: Response) => {
      try {
           const loggedInUserId = (req as any).user.id;
@@ -114,7 +121,7 @@ export const getBetsList = async (req: Request, res: Response) => {
 
           // Fetch logged-in user with role
           const loggedInUser = await User.findById(loggedInUserId)
-               .select("role fullName createdBy") // only needed fields
+               .select("role fullName createdBy")
                .lean();
 
           if (!loggedInUser) {
@@ -153,7 +160,7 @@ export const getBetsList = async (req: Request, res: Response) => {
 
           // Fetch bets with pagination
           const bets = await Bet.find(query)
-               .populate("user", "fullName") // show who placed bet
+               .populate("user", "fullName")
                .skip((page - 1) * limit)
                .limit(limit)
                .sort({ createdAt: -1 })
@@ -161,12 +168,70 @@ export const getBetsList = async (req: Request, res: Response) => {
 
           const total = await Bet.countDocuments(query);
 
+          // 🔗 Attach match title for each bet
+          const betsWithMatchTitle = await Promise.all(
+               bets.map(async (bet) => {
+                    try {
+                         // 0. Get Team Name
+                         // force the oddsDoc.odds to be treated as any or as the right shape
+                         const oddsDoc = await matchOddsModel
+                              .findById(bet.matchId)
+                              .lean();
+
+                         let teamName: string | undefined;
+
+                         // ✅ type assertion fixes the TS error without touching model file
+                         const odd = oddsDoc?.odds as any;
+
+                         if (odd?.teama?.teamId === bet.teamId) {
+                              teamName = odd.teama.teamName;
+                         } else if (odd?.teamb?.teamId === bet.teamId) {
+                              teamName = odd.teamb.teamName;
+                         }
+
+                         teamName = teamName || "Unknown Team";
+
+                         // 1. Get matchOdds again (use findOne instead of findById)
+                         const odds = await matchOddsModel
+                              .findById(bet.matchId)
+                              .lean();
+
+                         if (!odds) {
+                              return { ...bet, teamName, matchTitle: "Unknown Match" };
+                         }
+
+                         // 2. Try fetching from matchModel
+                         let match: MatchTitleDoc | null = await matchModel
+                              .findOne({ matchId: odds.matchId })
+                              .select("title")
+                              .lean<MatchTitleDoc>();
+
+                         // 3. If not in live matches, try historical
+                         if (!match) {
+                              match = await historicalmatchModel
+                                   .findOne({ matchId: odds.matchId })
+                                   .select("title")
+                                   .lean<MatchTitleDoc>();
+                         }
+
+                         return {
+                              ...bet,
+                              teamName,
+                              matchTitle: match?.title || "Unknown Match",
+                         };
+                    } catch (err) {
+                         console.error(`Error fetching match for bet ${bet._id}:`, err);
+                         return { ...bet, matchTitle: "Unknown Match" };
+                    }
+               })
+          );
+
           return res.json({
                success: true,
                page,
                limit,
                total,
-               data: bets,
+               data: betsWithMatchTitle,
           });
      } catch (err) {
           console.error("❌ Error in getBetsList:", err);
