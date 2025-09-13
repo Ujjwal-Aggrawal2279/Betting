@@ -3,6 +3,8 @@ import { Server } from "socket.io";
 import { fetchAndUpsertMatches } from "../services/matchService";
 import { fetchAndUpsertMatchOdds } from "../services/matchOddsService";
 import { fetchMatchScoreCard } from "../services/matchScoreCard";
+import { updateMatchResultsCron } from "../services/matchResult";
+import { updateBetResultsCron } from "../services/betResult";
 
 export const scheduleMatchCron = (io: Server) => {
        // Daily fetch at 00:15 AM
@@ -23,9 +25,21 @@ export const scheduleMatchCron = (io: Server) => {
               await fetchAndUpsertMatchOdds();
        })
 
-       // Every 5 minutes fetch scoreCard for live matches
-       cron.schedule("*/5 * * * *", async () => {
-              console.log(`[${new Date().toISOString()}] Running every 5 minutes match scoreCard update...`);
+       // Every 3 minutes fetch scoreCard for live matches
+       cron.schedule("*/3 * * * *", async () => {
+              console.log(`[${new Date().toISOString()}] Running every 3 minutes match scoreCard update...`);
               await fetchMatchScoreCard();
+       })
+
+       // Every 3 minutes update result for matches
+       cron.schedule("*/3 * * * *", async () => {
+              console.log(`[${new Date().toISOString()}] Running every 3 minutes match result update...`);
+              await updateMatchResultsCron();
+       })
+
+       // Every 5 minutes update tokens based on result
+       cron.schedule("*/5 * * * *", async () => {
+              console.log(`[${new Date().toISOString()}] Running every 5 minutes token update...`);
+              await updateBetResultsCron();
        })
 };
