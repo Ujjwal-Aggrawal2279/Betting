@@ -203,17 +203,6 @@ const userSlice = createSlice({
       })
       .addCase(manageUserTokens.fulfilled, (state, action) => {
         state.updating = false;
-        // Update the user's token in the list if exists
-        const userIndex = state.list.findIndex(
-          (u) => u._id === action.payload.userId
-        );
-        if (userIndex !== -1) {
-          state.list[userIndex].tokens = action.payload.tokens;
-        }
-        // If currently viewing single user
-        if (state.user && state.user._id === action.payload.userId) {
-          state.user.tokens = action.payload.tokens;
-        }
       })
       .addCase(manageUserTokens.rejected, (state, action) => {
         state.updating = false;

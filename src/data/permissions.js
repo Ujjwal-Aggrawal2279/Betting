@@ -5,6 +5,7 @@ export const Permissions = [
   { label: "Delete Role", value: "delete_role" },
   { label: "Role Permissions Manager", value: "role_permissions_manager" },
   { label: "Token Manager", value: "token_manager" },
+  { label: "Bet Manager", value: "rates_manager" },
   { label: "Create User", value: "create_user" },
   { label: "Edit User", value: "edit_user" },
   { label: "Delete User", value: "delete_user" },

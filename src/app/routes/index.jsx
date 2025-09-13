@@ -44,7 +44,7 @@ const router = createBrowserRouter([
                      },
                      {
                             path: "rates",
-                            element: <ProtectedRoute><RatesPage /></ProtectedRoute>
+                            element: <ProtectedRoute requiredPermissions={["rates_manager"]}><RatesPage /></ProtectedRoute>
                      },
                      {
                             path: "tokens",
