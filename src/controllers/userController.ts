@@ -127,27 +127,32 @@ export const getUsers = async (req: Request, res: Response) => {
           const loggedInUserId = (req as any).user.id;
           const page = parseInt(req.query.page as string) || 1;
           const limit = parseInt(req.query.limit as string) || 15;
+          const roleFilter = req.query.role as string;
+          const fullNameFilter = req.query.fullName as string;
 
-          // Fetch logged-in user with role
+          // 👉 Fetch logged-in user with role
           const loggedInUser = await User.findById(loggedInUserId)
-               .select("-password -permissions -tokens -isLoggedIn -firstName -lastName -profilePic -username") // Exclude sensitive fields
-               .populate("role", "name")
+               .select(
+                    "-password -permissions -tokens -isLoggedIn -firstName -lastName -profilePic -username"
+               )
+               .populate("role", "name parentRole")
                .lean();
 
-          if (!loggedInUser) return res.status(404).json({ message: "User not found" });
+          if (!loggedInUser)
+               return res.status(404).json({ message: "User not found" });
 
           const role = await Role.findById(loggedInUser.role as any).lean();
           if (!role) return res.status(400).json({ message: "Role not found" });
 
-          let query = {};
-          let selectFields = "-password -permissions -tokens -isLoggedIn -firstName -lastName -profilePic -username";
+          // 👉 Base query (role scope)
+          let query: any = {};
 
-          if (!role.parentRole) {
-               query = {};
-          } else {
+          if (role.parentRole) {
                // Recursive fetch for self + descendants
                const getDescendantIds = async (userId: string): Promise<string[]> => {
-                    const children = await User.find({ createdBy: userId }).select("_id").lean();
+                    const children = await User.find({ createdBy: userId })
+                         .select("_id")
+                         .lean();
                     let allIds = children.map((c) => c._id.toString());
                     for (const child of children) {
                          const subIds = await getDescendantIds(child._id.toString());
@@ -156,13 +161,27 @@ export const getUsers = async (req: Request, res: Response) => {
                     return allIds;
                };
 
-               const descendantIds = await getDescendantIds(loggedInUser._id.toString());
-               query = { _id: { $in: [loggedInUser._id, ...descendantIds] } };
+               const descendantIds = await getDescendantIds(
+                    loggedInUser._id.toString()
+               );
+               query._id = { $in: [loggedInUser._id, ...descendantIds] };
           }
 
-          // Fetch users with pagination
+          // 👉 Apply role filter
+          if (roleFilter && roleFilter !== "all") {
+               query.role = roleFilter; // roleId from frontend
+          }
+
+          // 👉 Apply fullName filter
+          if (fullNameFilter) {
+               query.fullName = { $regex: fullNameFilter, $options: "i" };
+          }
+
+          // 👉 Fetch users with pagination
           const users = await User.find(query)
-               .select(selectFields)
+               .select(
+                    "-password -permissions -tokens -isLoggedIn -firstName -lastName -profilePic -username"
+               )
                .populate("role", "name")
                .populate("createdBy", "fullName")
                .skip((page - 1) * limit)
@@ -183,6 +202,7 @@ export const getUsers = async (req: Request, res: Response) => {
           res.status(500).json({ message: "Server error" });
      }
 };
+
 
 // Get single user
 export const getSingleUser = async (req: Request, res: Response) => {
