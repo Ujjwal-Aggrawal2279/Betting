@@ -15,6 +15,7 @@ export type RolePermission =
      | "delete_role"
      | "role_permissions_manager"
      | "token_manager"
+     | "rates_manager"
      | "create_user"
      | "edit_user"
      | "delete_user"
@@ -36,6 +37,7 @@ const RoleSchema = new Schema<IRole>(
                          "delete_role",
                          "role_permissions_manager",
                          "token_manager",
+                         "rates_manager",
                          "create_user",
                          "edit_user",
                          "delete_user",
