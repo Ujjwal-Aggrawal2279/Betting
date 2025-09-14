@@ -212,18 +212,18 @@ export default function UserList() {
                                                                              align="start"
                                                                              className="bg-[#1E2233] border border-white/10 text-white font-display"
                                                                       >
-                                                                             <DropdownMenuItem
+                                                                             {permissions.includes("edit_user") && <DropdownMenuItem
                                                                                     className="hover:bg-amber-500/30 cursor-pointer"
                                                                                     onClick={() => handleEditClick(user._id)}
                                                                              >
                                                                                     Edit
-                                                                             </DropdownMenuItem>
-                                                                             <DropdownMenuItem
+                                                                             </DropdownMenuItem>}
+                                                                             {permissions.includes("delete_user") && <DropdownMenuItem
                                                                                     className="hover:bg-red-500/30 cursor-pointer"
                                                                                     onClick={() => handleDeleteAlert(user._id)}
                                                                              >
                                                                                     Delete
-                                                                             </DropdownMenuItem>
+                                                                             </DropdownMenuItem>}
                                                                              {permissions.includes("token_manager") && (
                                                                                     <DropdownMenuItem
                                                                                            className="hover:bg-amber-500/30 cursor-pointer"

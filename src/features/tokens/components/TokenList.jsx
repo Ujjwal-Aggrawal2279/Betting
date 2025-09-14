@@ -26,6 +26,7 @@ import { toast } from "sonner";
 
 const TokenList = () => {
        const dispatch = useDispatch();
+       const permissions = useSelector((state) => state.auth.permissions)
        const { tokens, loading } = useSelector((state) => state.tokens);
 
        const [open, setOpen] = useState(false);
@@ -82,7 +83,7 @@ const TokenList = () => {
                                                  <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Token Amount</TableHead>
                                                  <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Status</TableHead>
                                                  <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Action taken by</TableHead>
-                                                 <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Actions</TableHead>
+                                                 {permissions.includes("token_manager") && <TableHead className="text-white/80 font-semibold uppercase tracking-wide text-xs">Actions</TableHead>}
                                           </TableRow>
                                    </TableHeader>
                                    <TableBody>
@@ -98,7 +99,7 @@ const TokenList = () => {
                                                         <TableCell className="font-medium text-white/80 capitalize">{token.status}</TableCell>
                                                         <TableCell className="font-medium text-white/80">{token?.approvedBy?.fullName || token?.rejectedBy?.fullName}</TableCell>
                                                         <TableCell className="font-medium text-white/80">
-                                                               <DropdownMenu>
+                                                               {permissions.includes("token_manager") && <DropdownMenu>
                                                                       <DropdownMenuTrigger asChild>
                                                                              <button className="p-1 hover:bg-white/10 cursor-pointer">
                                                                                     <MoreHorizontal className="h-4 w-4 text-white/70" />
@@ -135,7 +136,7 @@ const TokenList = () => {
                                                                                     </DropdownMenuItem>
                                                                              )}
                                                                       </DropdownMenuContent>
-                                                               </DropdownMenu>
+                                                               </DropdownMenu>}
                                                         </TableCell>
                                                  </TableRow>
                                           ))}
