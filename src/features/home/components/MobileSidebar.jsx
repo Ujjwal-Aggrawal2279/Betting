@@ -5,12 +5,13 @@ import {
        Gamepad2,
        Banknote,
        Coins,
-       ChevronUpCircleIcon,
+       ChevronUpCircle,
        UserPlus,
        CircleDollarSign,
        Lock,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const navItems = [
        { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -19,15 +20,17 @@ const navItems = [
        { to: "/rates", label: "Rates", icon: CircleDollarSign },
        { to: "/bets", label: "Bets", icon: Banknote },
        { to: "/tokens", label: "Tokens", icon: Coins },
-       {to: "/forgot-password", label: "Password", icon: Lock}
+       { to: "/forgot-password", label: "Password", icon: Lock },
 ];
 
 const MobileSidebar = () => {
+       const permissions = useSelector((state) => state.auth.permissions);
+
        return (
               <div className="lg:hidden">
                      <Sheet>
                             <SheetTrigger className="fixed bottom-4 left-4 bg-[#EC981A] p-3 rounded-full shadow-lg z-50">
-                                   <ChevronUpCircleIcon size={24} className="text-[#000]" />
+                                   <ChevronUpCircle size={24} className="text-[#000]" />
                             </SheetTrigger>
 
                             <SheetContent
@@ -40,27 +43,33 @@ const MobileSidebar = () => {
                                    </VisuallyHidden>
 
                                    <ul className="pt-6 space-y-6">
-                                          {navItems.map(({ to, label, icon: Icon }) => (
-                                                 <li key={to}>
-                                                        <NavLink
-                                                               to={to}
-                                                               className={({ isActive }) =>
-                                                                      `flex items-center gap-3 text-lg transition-colors ${isActive
-                                                                             ? "text-[#EC981A]"
-                                                                             : "text-[#2D3660] hover:text-[#EC981A]"
-                                                                      }`
-                                                               }
-                                                        >
-                                                               <Icon size={24} />
-                                                               {label}
-                                                        </NavLink>
-                                                 </li>
-                                          ))}
+                                          {navItems.map(({ to, label, icon: Icon }) => {
+                                                 // Only show dashboard if user has the permission
+                                                 if (to === "/dashboard" && !permissions.includes("view_dashboard")) {
+                                                        return null;
+                                                 }
+
+                                                 return (
+                                                        <li key={to}>
+                                                               <NavLink
+                                                                      to={to}
+                                                                      className={({ isActive }) =>
+                                                                             `flex items-center gap-3 text-lg transition-colors ${isActive
+                                                                                    ? "text-[#EC981A]"
+                                                                                    : "text-[#2D3660] hover:text-[#EC981A]"
+                                                                             }`
+                                                                      }
+                                                               >
+                                                                      <Icon size={24} />
+                                                                      {label}
+                                                               </NavLink>
+                                                        </li>
+                                                 );
+                                          })}
                                    </ul>
                             </SheetContent>
                      </Sheet>
               </div>
-
        );
 };
 

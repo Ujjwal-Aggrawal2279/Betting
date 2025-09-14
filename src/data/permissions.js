@@ -1,5 +1,6 @@
 export const Permissions = [
   { label: "View Roles", value: "view_roles" },
+  { label: "View Dashboard", value: "view_dashboard" },
   { label: "Create Role", value: "create_role" },
   { label: "Edit Role", value: "edit_role" },
   { label: "Delete Role", value: "delete_role" },
