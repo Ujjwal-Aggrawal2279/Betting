@@ -19,21 +19,21 @@ export const scheduleMatchCron = (io: Server) => {
               await fetchAndUpsertMatches(io);
        });
 
-       // Every 5 minutes fetch odds for live/scheduled matches
-       cron.schedule("*/5 * * * *", async () => {
-              console.log(`[${new Date().toISOString()}] Running every 5 minutes match odds update...`);
+       // Every 2 minutes fetch odds for live/scheduled matches
+       cron.schedule("*/2 * * * *", async () => {
+              console.log(`[${new Date().toISOString()}] Running every 2 minutes match odds update...`);
               await fetchAndUpsertMatchOdds();
        })
 
-       // Every 3 minutes fetch scoreCard for live matches
-       cron.schedule("*/3 * * * *", async () => {
-              console.log(`[${new Date().toISOString()}] Running every 3 minutes match scoreCard update...`);
+       // Every 2 minutes fetch scoreCard for live matches
+       cron.schedule("*/2 * * * *", async () => {
+              console.log(`[${new Date().toISOString()}] Running every 2 minutes match scoreCard update...`);
               await fetchMatchScoreCard();
        })
 
-       // Every 3 minutes update result for matches
-       cron.schedule("*/3 * * * *", async () => {
-              console.log(`[${new Date().toISOString()}] Running every 3 minutes match result update...`);
+       // Every 2 minutes update result for matches
+       cron.schedule("*/2 * * * *", async () => {
+              console.log(`[${new Date().toISOString()}] Running every 2 minutes match result update...`);
               await updateMatchResultsCron();
        })
 
