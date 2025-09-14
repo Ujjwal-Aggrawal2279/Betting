@@ -47,11 +47,11 @@ const GameCard = ({ matchId, format, teamA, teamB, logoA, logoB, title, venue, s
                                    <p className="text-gray-400 text-xs md:text-sm truncate lg:max-w-[150px]">{venue}</p>
 
                                    {/* Start → End */}
-                                   <div className="mt-1 flex items-center gap-1 text-gray-400 text-xs md:text-sm">
+                                   {/* <div className="mt-1 flex items-center gap-1 text-gray-400 text-xs md:text-sm">
                                           <span>{getTimeFromISTString(startDate)}</span>
                                           <span className="text-gray-500">→</span>
                                           <span>{getTimeFromISTString(endDate)}</span>
-                                   </div>
+                                   </div> */}
                             </div>
                      </div>
               </Link>
