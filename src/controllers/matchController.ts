@@ -6,15 +6,6 @@ import { IUser, User } from "../models/user.model";
 import mongoose from "mongoose";
 import MatchScoreCard from "../models/matchScoreCard.model";
 
-// Convert UTC to IST string
-const convertToIST = (utcDate?: Date | string | null) => {
-       if (!utcDate) return null;
-       const dateObj = new Date(utcDate);
-       const istOffset = 5.5 * 60; // IST offset in minutes
-       const istDate = new Date(dateObj.getTime() + istOffset * 60 * 1000);
-       return istDate.toISOString();
-};
-
 // Get Matches
 export const getMatches = async (req: Request, res: Response) => {
        try {
@@ -66,8 +57,8 @@ export const getMatches = async (req: Request, res: Response) => {
 
               const converted = matches.map(match => ({
                      ...match,
-                     startDate: convertToIST(match.startDate),
-                     endDate: convertToIST(match.endDate),
+                     startDate: match.startDate,
+                     endDate: match.endDate,
               }));
 
               return res.json({ success: true, data: converted });
@@ -154,8 +145,8 @@ export const createMatchOdds = async (req: Request, res: Response) => {
                      type,
                      source: "APP",
                      odds: {
-                            teama: { teamId: odds.teama.teamId , teamName: odds.teama.teamName, back: odds.teama.back, lay: odds.teama.lay },
-                            teamb: { teamId: odds.teamb.teamId , teamName: odds.teamb.teamName, back: odds.teamb.back, lay: odds.teamb.lay },
+                            teama: { teamId: odds.teama.teamId, teamName: odds.teama.teamName, back: odds.teama.back, lay: odds.teama.lay },
+                            teamb: { teamId: odds.teamb.teamId, teamName: odds.teamb.teamName, back: odds.teamb.back, lay: odds.teamb.lay },
                      },
                      createdBy: userId,
               };
