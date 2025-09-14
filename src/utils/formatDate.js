@@ -1,8 +1,12 @@
-export const getTimeFromISTString = (iso) => {
+export const getTimeFromISTString = (iso: string) => {
   if (!iso) return "-";
+
   const d = new Date(iso);
-  const hours = d.getUTCHours().toString().padStart(2, "0");
-  const minutes = d.getUTCMinutes().toString().padStart(2, "0");
-  console.log(hours, minutes)
-  return `${hours}:${minutes}`;
+
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Kolkata", // ✅ Force IST
+  }).format(d);
 };
