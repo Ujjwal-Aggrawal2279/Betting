@@ -1,4 +1,4 @@
-export const getTimeFromISTString = (iso: string) => {
+export const getTimeFromISTString = (iso) => {
   if (!iso) return "-";
 
   const d = new Date(iso);
