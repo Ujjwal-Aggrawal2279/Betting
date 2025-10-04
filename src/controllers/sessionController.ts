@@ -83,62 +83,58 @@ export const getMatchSessions = async (req: Request, res: Response) => {
 // create match session
 export const createMatchSession = async (req: Request, res: Response) => {
        try {
-              const { matchId, teamName, sessions } = req.body;
-              if (!matchId) {
-                     return res.status(400).json({ message: "Match ID is required" });
-              }
-              if (!teamName) {
-                     return res.status(400).json({ message: "Team ID is required" });
-              }
-              if (!sessions || !Array.isArray(sessions) || !sessions.length) {
+              const { matchId, sessions } = req.body;
+              if (!matchId) return res.status(400).json({ message: "Match ID is required" });
+              if (!sessions || !Array.isArray(sessions) || !sessions.length)
                      return res.status(400).json({ message: "Sessions array is required" });
-              }
-              const createdBy = (req as any).user?.id;
-              const existingSession = await matchSessionsModel.findOne({ matchId, teamName });
-              if (existingSession) {
-                     const existingOverRanges = existingSession.sessions?.map(s => s.overRange) || [];
-                     for (const newSession of sessions) {
-                            if (!newSession.overRange) continue;
-                            const [newStart, newEnd] = newSession.overRange
-                                   .split("-")
-                                   .map((s: any) => parseInt(s));
-                            for (const existingRange of existingOverRanges) {
-                                   const [exStart, exEnd] = existingRange
-                                          .replace(/\D/g, " ")
-                                          .trim()
-                                          .split(" ")
-                                          .map(Number);
 
-                                   if (
+              const createdBy = (req as any).user?.id;
+              const existingSession = await matchSessionsModel.findOne({ matchId });
+
+              const parseRange = (rangeStr: string) => {
+                     const [start, end] = rangeStr.split("-").map(Number);
+                     return [start, end];
+              };
+
+              if (existingSession) {
+                     for (const newSession of sessions) {
+                            if (!newSession.overRange || !newSession.teamName) continue;
+
+                            const [newStart, newEnd] = parseRange(newSession.overRange);
+
+                            for (const existing of existingSession.sessions) {
+                                   if (existing.teamName !== newSession.teamName) continue;
+
+                                   const [exStart, exEnd] = parseRange(existing.overRange);
+
+                                   const isOverlap =
                                           (newStart >= exStart && newStart <= exEnd) ||
                                           (newEnd >= exStart && newEnd <= exEnd) ||
-                                          (newStart <= exStart && newEnd >= exEnd)
-                                   ) {
+                                          (newStart <= exStart && newEnd >= exEnd);
+
+                                   if (isOverlap) {
                                           return res.status(400).json({
-                                                 message: `Overlapping or duplicate over range detected: ${newSession.overRange} conflicts with existing ${existingRange}`,
+                                                 message: `Overlapping overRange for team "${newSession.teamName}": ${newSession.overRange} conflicts with existing ${existing.overRange}`,
                                           });
                                    }
                             }
                      }
-                     const matchSession = await matchSessionsModel.findOneAndUpdate(
-                            { matchId, teamName },
+
+                     const updatedSession = await matchSessionsModel.findOneAndUpdate(
+                            { matchId },
                             { $push: { sessions: { $each: sessions } }, $set: { createdBy } },
                             { new: true }
                      );
+
                      return res.status(200).json({
                             message: "Match session updated successfully",
-                            data: matchSession,
+                            data: updatedSession,
                      });
               } else {
-                     const matchSession = await matchSessionsModel.create({
-                            matchId,
-                            teamName,
-                            sessions,
-                            createdBy,
-                     });
+                     const createdSession = await matchSessionsModel.create({ matchId, sessions, createdBy });
                      return res.status(200).json({
                             message: "Match session created successfully",
-                            data: matchSession,
+                            data: createdSession,
                      });
               }
        } catch (error) {
@@ -146,6 +142,7 @@ export const createMatchSession = async (req: Request, res: Response) => {
               return res.status(500).json({ message: "Internal Server Error" });
        }
 };
+
 
 
 // update match session
