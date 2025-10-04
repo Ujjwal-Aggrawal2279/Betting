@@ -83,18 +83,18 @@ export const getMatchSessions = async (req: Request, res: Response) => {
 // create match session
 export const createMatchSession = async (req: Request, res: Response) => {
        try {
-              const { matchId, teamId, sessions } = req.body;
+              const { matchId, teamName, sessions } = req.body;
               if (!matchId) {
                      return res.status(400).json({ message: "Match ID is required" });
               }
-              if (!teamId) {
+              if (!teamName) {
                      return res.status(400).json({ message: "Team ID is required" });
               }
               if (!sessions || !Array.isArray(sessions) || !sessions.length) {
                      return res.status(400).json({ message: "Sessions array is required" });
               }
               const createdBy = (req as any).user?.id;
-              const existingSession = await matchSessionsModel.findOne({ matchId, teamId });
+              const existingSession = await matchSessionsModel.findOne({ matchId, teamName });
               if (existingSession) {
                      const existingOverRanges = existingSession.sessions?.map(s => s.overRange) || [];
                      for (const newSession of sessions) {
@@ -121,7 +121,7 @@ export const createMatchSession = async (req: Request, res: Response) => {
                             }
                      }
                      const matchSession = await matchSessionsModel.findOneAndUpdate(
-                            { matchId, teamId },
+                            { matchId, teamName },
                             { $push: { sessions: { $each: sessions } }, $set: { createdBy } },
                             { new: true }
                      );
@@ -132,7 +132,7 @@ export const createMatchSession = async (req: Request, res: Response) => {
               } else {
                      const matchSession = await matchSessionsModel.create({
                             matchId,
-                            teamId,
+                            teamName,
                             sessions,
                             createdBy,
                      });
