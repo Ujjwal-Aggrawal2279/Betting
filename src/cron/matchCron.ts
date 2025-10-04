@@ -5,6 +5,7 @@ import { fetchAndUpsertMatchOdds } from "../services/matchOddsService";
 import { fetchMatchScoreCard } from "../services/matchScoreCard";
 import { updateMatchResultsCron } from "../services/matchResult";
 import { updateBetResultsCron } from "../services/betResult";
+import { updateMatchSessions } from "../services/matchSessions";
 
 export const scheduleMatchCron = (io: Server) => {
        // Daily fetch at 00:15 AM
@@ -12,6 +13,12 @@ export const scheduleMatchCron = (io: Server) => {
               console.log(`[${new Date().toISOString()}] Running daily match fetch...`);
               await fetchAndUpsertMatches(io);
        });
+
+       // Auto create the featured sessions for live matches
+       cron.schedule("*/10 * * * *", async () => {
+              console.log(`[${new Date().toISOString()}] Running every 10 minutes match sessions update...`);
+              await updateMatchSessions();
+       })
 
        // Every 10 mins fetch for new/updated matches
        cron.schedule("*/10 * * * *", async () => {

@@ -11,6 +11,7 @@ import roleRoutes from "./routes/roleRoutes";
 import userRoutes from "./routes/userRoutes";
 import matchRoutes from "./routes/matchRoutes";
 import tokenRoutes from "./routes/tokenRoutes";
+import sessionRoutes from "./routes/sessionRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
 import betRoutes from "./routes/betsRoutes"
 
@@ -34,7 +35,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
-app.use("/api", [authRoutes, roleRoutes, userRoutes, matchRoutes, tokenRoutes, dashboardRoutes, betRoutes]);
+app.use("/api", [authRoutes, roleRoutes, userRoutes, matchRoutes, tokenRoutes, sessionRoutes, dashboardRoutes, betRoutes]);
 
 // DB Connection
 connectDB();
