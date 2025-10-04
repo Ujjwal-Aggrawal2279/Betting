@@ -9,6 +9,7 @@ import {
        UserPlus,
        CircleDollarSign,
        Lock,
+       Database,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -18,6 +19,7 @@ const navItems = [
        { to: "/users", label: "Users", icon: UserPlus },
        { to: "/games", label: "Games", icon: Gamepad2 },
        { to: "/rates", label: "Rates", icon: CircleDollarSign },
+       { to: "/sessions", label: "Sessions", icon: Database },
        { to: "/bets", label: "Bets", icon: Banknote },
        { to: "/tokens", label: "Tokens", icon: Coins },
        { to: "/forgot-password", label: "Password", icon: Lock },

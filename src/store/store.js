@@ -1,21 +1,22 @@
-import { configureStore } from '@reduxjs/toolkit'
-import authReducer from './slices/authSlice'
-import userReducer from './slices/userSlice'
-import roleReducer from './slices/roleSlice'
-import matchReducer from './slices/matchSlice'
-import tokenReducer from './slices/tokenSlice'
-import dashboardRouter from './slices/dashboardSlice'
-import betReducer from './slices/betSlice'
-import { persistStore, persistReducer } from 'redux-persist'
-import storage from 'redux-persist/lib/storage'
-import { combineReducers } from 'redux'
+import { configureStore } from "@reduxjs/toolkit";
+import authReducer from "./slices/authSlice";
+import userReducer from "./slices/userSlice";
+import roleReducer from "./slices/roleSlice";
+import matchReducer from "./slices/matchSlice";
+import tokenReducer from "./slices/tokenSlice";
+import dashboardRouter from "./slices/dashboardSlice";
+import betReducer from "./slices/betSlice";
+import sessionReducer from "./slices/sessionSlice";
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
+import { combineReducers } from "redux";
 
 // Persist config just for auth slice
 const authPersistConfig = {
-  key: 'auth',
+  key: "auth",
   storage,
-  whitelist: ['token', 'isAuthenticated']
-}
+  whitelist: ["token", "isAuthenticated"],
+};
 
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
@@ -24,15 +25,16 @@ const rootReducer = combineReducers({
   match: matchReducer,
   tokens: tokenReducer,
   stats: dashboardRouter,
-  bets: betReducer
-})
+  bets: betReducer,
+  sessions: sessionReducer,
+});
 
 export const store = configureStore({
   reducer: rootReducer,
-  middleware: getDefaultMiddleware =>
+  middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false
-    })
-})
+      serializableCheck: false,
+    }),
+});
 
-export const persistor = persistStore(store)
+export const persistor = persistStore(store);

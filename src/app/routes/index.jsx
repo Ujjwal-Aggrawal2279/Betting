@@ -12,6 +12,7 @@ import RatesPage from "../../features/rates/pages/RatesPage";
 import TokenPage from "../../features/tokens/pages/TokenPage";
 import ForgotPasswordPage from "../../features/auth/pages/ForgotPasswordPage";
 import Betspage from "../../features/bets/pages/Betspage";
+import Session from "../../features/sessions/pages/Session";
 
 const router = createBrowserRouter([
        {
@@ -45,6 +46,10 @@ const router = createBrowserRouter([
                      {
                             path: "rates",
                             element: <ProtectedRoute requiredPermissions={["rates_manager"]}><RatesPage /></ProtectedRoute>
+                     },
+                     {
+                            path: "sessions",
+                            element: <ProtectedRoute requiredPermissions={["match_session_manager"]}><Session /></ProtectedRoute>
                      },
                      {
                             path: "tokens",
